@@ -153,6 +153,23 @@ input{font:inherit;color:inherit}
 .save:disabled{opacity:.4;box-shadow:none}
 .link{display:block;margin:14px auto 0;border:0;background:none;color:var(--f);font-size:15px;font-weight:600}
 .goal{display:flex;align-items:center;gap:10px;margin:8px 0 16px}
+.calc .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.calc label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.calc input{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:12px;font-size:16px;outline:none;color:var(--tx);width:100%;text-align:center}
+.calc .seg{background:var(--card);box-shadow:var(--sh)}
+.calc .seg button.on{background:var(--g);color:#fff}
+.acts-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 12px}
+.act{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:10px 14px;text-align:left}
+.act b{display:block;font-size:14px}
+.act span{font-size:12px;color:var(--mut)}
+.act.on{outline:2px solid var(--g);background:#eefaf2}
+.res{background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:14px 16px;margin:14px 0 4px}
+.res .big{font-size:34px;font-weight:300;letter-spacing:-1px;color:var(--tx)}
+.res .row{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:4px}
+.res .row b{color:var(--tx)}
+.res .warn{font-size:12px;color:#c0563c;margin-top:8px}
+.or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:18px 0 6px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .goal input{flex:1;font-size:28px;font-weight:300;text-align:center;border:0;background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--sh);outline:none}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
@@ -375,7 +392,7 @@ input{font:inherit;color:inherit}
   <details><summary>🎯 Objetivo y resumen</summary><div class="body">
     <ul>
       <li>El anillo muestra las kcal que te quedan hoy: <span style="color:#4a6cf7">azul</span> lo comido, <span style="color:#3dbb6f">verde</span> lo disponible, <span style="color:#ff6b6b">rojo</span> si te pasas.</li>
-      <li>Cambia tu objetivo diario con el botón ☰ de arriba a la izquierda (por defecto 2000 kcal).</li>
+      <li>Con el botón ☰ de arriba a la izquierda puedes <b>calcular tu objetivo</b> según sexo, edad, peso, altura, actividad y lo que buscas (perder, mantener o ganar), o ponerlo a mano. Por defecto son 2000 kcal.</li>
       <li>"Últimos 7 días" muestra cada día frente al objetivo, la media y los días cumplidos.</li>
     </ul></div></details>
 
@@ -399,8 +416,31 @@ input{font:inherit;color:inherit}
 <div class="sheet" id="sheetGoal"><div class="sheet-inner">
   <div class="grab"></div>
   <div class="head"><h3>Objetivo diario</h3><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+  <div class="calc">
+    <div class="sec" style="margin-top:0">Calcula tu objetivo</div>
+    <div class="seg" id="cSex" style="margin-top:8px"><button data-v="h">Hombre</button><button data-v="m">Mujer</button></div>
+    <div class="row3">
+      <label>Edad<input id="cAge" type="number" inputmode="numeric" min="12" max="100" placeholder="años"></label>
+      <label>Peso<input id="cW" type="number" inputmode="decimal" min="30" max="250" step="any" placeholder="kg"></label>
+      <label>Altura<input id="cH" type="number" inputmode="numeric" min="120" max="230" placeholder="cm"></label>
+    </div>
+    <div class="sec">Actividad y deporte</div>
+    <div class="acts-list" id="cAct">
+      <button class="act" data-v="1.2"><b>Sedentario</b><span>Trabajo sentado y casi sin deporte</span></button>
+      <button class="act" data-v="1.375"><b>Ligero</b><span>Caminar a diario o deporte 1–3 días por semana</span></button>
+      <button class="act" data-v="1.55"><b>Moderado</b><span>Deporte 3–5 días por semana (correr, bici, gimnasio…)</span></button>
+      <button class="act" data-v="1.725"><b>Alto</b><span>Deporte intenso 6–7 días o salidas largas (trail, ciclismo…)</span></button>
+      <button class="act" data-v="1.9"><b>Muy alto</b><span>Trabajo físico + entreno diario, o doble sesión</span></button>
+    </div>
+    <div class="sec">Qué quieres</div>
+    <div class="seg" id="cGoal" style="margin-top:8px"><button data-v="-1">Perder peso</button><button data-v="0">Mantener</button><button data-v="1">Ganar</button></div>
+    <div class="res" id="cRes"><div class="hint" style="text-align:left;margin:0">Rellena tus datos para ver el resultado.</div></div>
+    <button class="save" id="cUse" disabled>Usar como objetivo</button>
+  </div>
+  <div class="or">o ponlo a mano</div>
   <div class="goal"><input id="goalIn" type="number" inputmode="numeric" min="800" max="6000" step="50"><span>kcal</span></div>
   <button class="save" id="goalSave">Guardar objetivo</button>
+  <p class="hint">Cálculo orientativo (fórmula de Mifflin-St Jeor). Si tienes alguna condición de salud, embarazo o un objetivo deportivo concreto, consúltalo con un profesional.</p>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -1007,7 +1047,52 @@ function renderWeek(diary, goal){
 }
 
 // ---------- Objetivo ----------
-$('btnGoal').onclick = () => { $('goalIn').value = getGoal(); openSheet('sheetGoal'); };
+// Calculadora (Mifflin-St Jeor). El perfil se guarda en este móvil para no repetirlo.
+const prof = Object.assign({ sex:null, age:'', w:'', h:'', act:null, goal:'0' }, load('cal_perfil', {}));
+let calcRes = null;
+function syncCalc(){
+  $('cAge').value = prof.age; $('cW').value = prof.w; $('cH').value = prof.h;
+  document.querySelectorAll('#cSex button').forEach(b => b.classList.toggle('on', b.dataset.v === prof.sex));
+  document.querySelectorAll('#cAct .act').forEach(b => b.classList.toggle('on', b.dataset.v === prof.act));
+  document.querySelectorAll('#cGoal button').forEach(b => b.classList.toggle('on', b.dataset.v === prof.goal));
+  calc();
+}
+function calc(){
+  const a = +prof.age, w = +prof.w, h = +prof.h, f = +prof.act;
+  calcRes = null;
+  if (!prof.sex || !(a >= 12 && a <= 100) || !(w >= 30 && w <= 250) || !(h >= 120 && h <= 230) || !f) {
+    $('cRes').innerHTML = '<div class="hint" style="text-align:left;margin:0">Rellena sexo, edad, peso, altura y actividad para ver el resultado.</div>';
+    $('cUse').disabled = true; return;
+  }
+  const bmr = 10*w + 6.25*h - 5*a + (prof.sex === 'h' ? 5 : -161);
+  const tdee = bmr * f;
+  const g = +prof.goal;
+  let target = g < 0 ? tdee - Math.min(500, tdee*0.15) : g > 0 ? tdee + Math.min(400, tdee*0.10) : tdee;
+  const floor = prof.sex === 'h' ? 1500 : 1200;
+  let warn = '';
+  if (target < floor) {
+    target = Math.min(floor, tdee);
+    warn = tdee < floor ? 'Tu gasto diario estimado es bajo; para perder peso conviene consultarlo con un profesional.'
+                        : `No se recomienda bajar de ${floor} kcal al día sin supervisión, así que se queda en ese mínimo.`;
+  }
+  target = Math.round(target/50)*50;
+  calcRes = target;
+  const lbl = g < 0 ? 'para perder peso poco a poco (~0,3–0,5 kg/semana)' : g > 0 ? 'para ganar peso de forma gradual' : 'para mantener tu peso';
+  $('cRes').innerHTML = `<div class="hint" style="text-align:left;margin:0">Tu objetivo ${lbl}</div>
+    <div class="big">${target.toLocaleString('es-ES')} kcal</div>
+    <div class="row"><span>Gasto en reposo</span><b>${r0(bmr).toLocaleString('es-ES')} kcal</b></div>
+    <div class="row"><span>Gasto diario con tu actividad</span><b>${r0(tdee).toLocaleString('es-ES')} kcal</b></div>
+    ${warn ? `<div class="warn">${warn}</div>` : ''}`;
+  $('cUse').disabled = false; $('cUse').textContent = `Usar ${target.toLocaleString('es-ES')} kcal como objetivo`;
+}
+const saveProf = () => { store('cal_perfil', prof); calc(); };
+[['cAge','age'],['cW','w'],['cH','h']].forEach(([id,k]) => $(id).oninput = e => { prof[k] = e.target.value; saveProf(); });
+$('cSex').onclick = e => { const b = e.target.closest('button'); if (!b) return; prof.sex = b.dataset.v; saveProf(); syncCalc(); };
+$('cAct').onclick = e => { const b = e.target.closest('.act'); if (!b) return; prof.act = b.dataset.v; saveProf(); syncCalc(); };
+$('cGoal').onclick = e => { const b = e.target.closest('button'); if (!b) return; prof.goal = b.dataset.v; saveProf(); syncCalc(); };
+$('cUse').onclick = () => { if (!calcRes) return; localStorage.setItem(K.goal, calcRes); closeSheet('sheetGoal'); renderDash(); toast(`Objetivo: ${calcRes.toLocaleString('es-ES')} kcal al día`); };
+
+$('btnGoal').onclick = () => { $('goalIn').value = getGoal(); syncCalc(); openSheet('sheetGoal'); $('sheetGoal').scrollTop = 0; };
 $('goalSave').onclick = () => {
   const v = Math.round(+$('goalIn').value);
   if (v >= 800 && v <= 6000) { localStorage.setItem(K.goal, v); closeSheet('sheetGoal'); renderDash(); }
