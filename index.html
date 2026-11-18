@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Calorías">
+<meta name="theme-color" content="#f4f7f5">
+<title>Contador de calorías</title>
+<style>
+:root{
+  --bg:#f4f7f5;--card:#fff;--tx:#1b1f1d;--mut:#8a948f;--line:#eef1ef;
+  --g:#3dbb6f;--g2:#6fdc8c;--b:#4a6cf7;--c:#f5b13d;--p:#4a6cf7;--f:#ff6b6b;
+  --sh:0 6px 24px rgba(20,60,40,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Roboto,sans-serif}
+body{padding:calc(env(safe-area-inset-top) + 8px) 0 calc(env(safe-area-inset-bottom) + 120px)}
+main{max-width:520px;margin:0 auto;padding:0 18px}
+button{font:inherit;color:inherit;cursor:pointer}
+
+/* Cabecera */
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
+.top h1{font-size:19px;font-weight:600;margin:0}
+.top h1 b{font-weight:800}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:0;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center}
+.icon-btn svg{width:20px;height:20px}
+#status{text-align:center;font-size:12px;color:var(--mut);min-height:16px;margin:2px 0 0}
+.dlbar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 40px 0}
+.dlbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--g2));transition:width .2s}
+
+/* Anillo */
+.hero{position:relative;display:grid;place-items:center;margin:18px auto 4px;width:260px;height:260px}
+.hero > svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.hero .ctr{text-align:center}
+.hero .ico{width:28px;height:28px;color:#cfd6d2;margin:0 auto 2px}
+.hero .num{font-size:58px;font-weight:300;letter-spacing:-2px;line-height:1}
+.hero .lbl{font-size:13px;color:var(--mut);margin-top:6px}
+.hero circle{transition:stroke-dasharray .8s cubic-bezier(.2,.8,.2,1),stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px;text-align:center}
+.stat .bub{width:58px;height:58px;border-radius:50%;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;margin:0 auto 8px}
+.stat .bub svg{width:26px;height:26px}
+.stat b{display:block;font-size:22px;font-weight:700}
+.stat span{font-size:12px;color:var(--mut)}
+
+/* Tarjetas */
+.card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:18px;margin:16px 0}
+.card h2{font-size:17px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.card h2 small{font-size:12px;color:var(--mut);font-weight:500}
+.mrings{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.mring{position:relative;width:84px;height:84px;margin:0 auto 6px}
+.mring svg{transform:rotate(-90deg)}
+.mring div{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:17px}
+.mname{font-size:13px;font-weight:600}
+.mg{font-size:12px;color:var(--mut)}
+.meal{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.meal:first-of-type{border-top:0}
+.meal img,.meal .ph{width:52px;height:52px;border-radius:14px;object-fit:cover;background:#e9f6ee;flex:none;display:grid;place-items:center;font-size:22px}
+.meal .t{flex:1;min-width:0}
+.meal .t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:15px}
+.meal .t span{font-size:12px;color:var(--mut)}
+.meal .k{font-weight:700;font-size:15px;text-align:right}
+.meal .k span{display:block;font-size:11px;color:var(--mut);font-weight:500}
+.x{border:0;background:none;color:#c3cbc7;font-size:18px;padding:4px}
+.empty{color:var(--mut);font-size:14px;text-align:center;padding:10px 0}
+
+/* Barra inferior */
+.dock{position:fixed;left:0;right:0;bottom:0;padding:12px 18px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(to top,var(--bg) 60%,rgba(244,247,245,0));display:flex;gap:10px;justify-content:center;z-index:5}
+.fab{flex:1;max-width:340px;height:58px;border:0;border-radius:29px;background:linear-gradient(135deg,var(--g),#2fa35e);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px rgba(61,187,111,.35)}
+.fab svg{width:24px;height:24px}
+.fab2{width:58px;height:58px;border-radius:50%;border:0;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center}
+.fab2 svg{width:24px;height:24px;color:var(--g)}
+
+/* Hoja inferior */
+.scrim{position:fixed;inset:0;background:rgba(10,20,15,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--bg);border-radius:28px 28px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility 0s .35s;z-index:11;padding:10px 18px calc(env(safe-area-inset-bottom) + 20px)}
+.open .scrim{opacity:1;pointer-events:auto}
+.sheet.show{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.grab{width:40px;height:5px;border-radius:3px;background:#d6ddd9;margin:0 auto 12px}
+.sheet .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sheet .head h3{margin:0;font-size:20px}
+.photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:22px;display:block;box-shadow:var(--sh)}
+.scan{position:relative;overflow:hidden;border-radius:22px}
+.scan.busy::after{content:"";position:absolute;left:0;right:0;height:40%;top:-40%;background:linear-gradient(to bottom,rgba(111,220,140,0),rgba(111,220,140,.45));animation:scan 1.4s linear infinite}
+@keyframes scan{to{top:100%}}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:10px 14px;text-align:left}
+.chip b{display:block;font-size:14px;font-weight:600}
+.chip span{font-size:11px;color:var(--mut)}
+.chip.on{background:var(--g);color:#fff}
+.chip.on span{color:#e6fff0}
+.search{width:100%;margin-top:10px;padding:13px 16px;border-radius:16px;border:0;background:var(--card);box-shadow:var(--sh);font-size:16px;outline:none}
+#busList .chip{display:block;width:100%;margin-top:8px}
+.it{padding:12px 0;border-top:1px solid var(--line)}
+.it:first-child{border-top:0}
+.it .r{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.it .r b{font-size:15px}
+.it .r .kc{font-weight:700}
+.it .sub{font-size:12px;color:var(--mut)}
+.it input[type=range]{width:100%;margin:8px 0 2px;accent-color:var(--g)}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:6px;font-size:13px;color:var(--mut)}
+.seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:600}
+.tot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.tot b{font-size:34px;font-weight:300;letter-spacing:-1px}
+.stack{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line);gap:2px;margin-bottom:10px}
+.stack i:nth-child(1){background:var(--c)}.stack i:nth-child(2){background:var(--p)}.stack i:nth-child(3){background:var(--f)}
+.legend{display:flex;justify-content:space-between;font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.legend em{font-style:normal;color:var(--mut);font-size:12px}
+.save{width:100%;height:56px;border:0;border-radius:28px;background:linear-gradient(135deg,var(--g),#2fa35e);color:#fff;font-weight:700;font-size:17px;margin-top:6px;box-shadow:0 10px 24px rgba(61,187,111,.3)}
+.save:disabled{opacity:.4;box-shadow:none}
+.goal{display:flex;align-items:center;gap:10px;margin:8px 0 16px}
+.goal input{flex:1;font-size:28px;font-weight:300;text-align:center;border:0;background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--sh);outline:none}
+.foot{color:var(--mut);font-size:12px;text-align:center;margin:18px 6px}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <button class="icon-btn" id="btnGoal" aria-label="Objetivo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
+    </button>
+    <h1 id="fecha">Hoy</h1>
+    <button class="icon-btn" id="btnGal2" aria-label="Galería">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>
+    </button>
+  </div>
+  <p id="status">Preparando…</p>
+  <div class="dlbar" id="dl" hidden><i id="dlfill"></i></div>
+
+  <div class="hero">
+    <svg viewBox="0 0 260 260" width="260" height="260">
+      <defs>
+        <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6fdc8c"/><stop offset="1" stop-color="#3dbb6f"/></linearGradient>
+      </defs>
+      <circle cx="130" cy="130" r="112" fill="none" stroke="#e9eeeb" stroke-width="14"/>
+      <circle id="arcRest" cx="130" cy="130" r="112" fill="none" stroke="url(#gg)" stroke-width="14" stroke-linecap="round"/>
+      <circle id="arcUsed" cx="130" cy="130" r="112" fill="none" stroke="#4a6cf7" stroke-width="14" stroke-linecap="round"/>
+    </svg>
+    <div class="ctr">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-1.5-1.2-4-1.4-5.6 0C4.3 9 4.7 13 6.3 16c1.2 2.2 2.8 3.9 4.4 3.4.6-.2.9-.4 1.3-.4s.7.2 1.3.4c1.6.5 3.2-1.2 4.4-3.4 1.6-3 2-7-.1-9C16 5.6 13.5 5.8 12 7z"/><path d="M12 7c0-2 1-3.5 3-4"/></svg>
+      <div class="num" id="disp">0</div>
+      <div class="lbl" id="dispLbl">disponibles actualmente</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#3dbb6f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-1.5-1.2-4-1.4-5.6 0C4.3 9 4.7 13 6.3 16c1.2 2.2 2.8 3.9 4.4 3.4.6-.2.9-.4 1.3-.4s.7.2 1.3.4c1.6.5 3.2-1.2 4.4-3.4 1.6-3 2-7-.1-9C16 5.6 13.5 5.8 12 7z"/><path d="M12 7c0-2 1-3.5 3-4"/></svg></div><b id="sCons">0</b><span>Consumidas</span></div>
+    <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></svg></div><b id="sMeals">0</b><span>Comidas</span></div>
+    <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#1b1f1d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12l7-7M16 5h3v3"/></svg></div><b id="sGoal">2000</b><span>kcal objetivo</span></div>
+  </div>
+
+  <section class="card">
+    <h2>Macronutrientes <small>% de la energía de hoy</small></h2>
+    <div class="mrings" id="mrings"></div>
+  </section>
+
+  <section class="card">
+    <h2>Comidas de hoy</h2>
+    <div id="hoy"></div>
+  </section>
+
+  <p class="foot">Las fotos se analizan en tu propio móvil y no salen de él. La primera vez se descarga el modelo de IA (~155 MB, mejor con wifi) y queda guardado. Las calorías son estimaciones: ajusta los gramos para afinar.</p>
+</main>
+
+<div class="dock">
+  <label class="fab" for="cam">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    Escanear plato
+  </label>
+  <label class="fab2" for="gal" aria-label="Elegir de la galería">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>
+  </label>
+  <input id="cam" type="file" accept="image/*" capture="environment" hidden>
+  <input id="gal" type="file" accept="image/*" hidden>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- Hoja: análisis del plato -->
+<div class="sheet" id="sheetPlate">
+  <div class="grab"></div>
+  <div class="head"><h3>Tu plato</h3><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+  <div class="scan" id="scanBox"><img class="photo" id="preview" alt=""></div>
+  <div class="chips" id="sugList"></div>
+  <input class="search" id="buscar" type="search" placeholder="🔍  ¿No está? Busca el alimento…">
+  <div id="busList"></div>
+  <section class="card" id="itemsCard" hidden>
+    <div id="items"></div>
+  </section>
+  <section class="card" id="sumCard" hidden>
+    <div id="resumen"></div>
+  </section>
+  <button class="save" id="guardar" disabled>Añadir a hoy</button>
+</div>
+
+<!-- Hoja: objetivo -->
+<div class="sheet" id="sheetGoal">
+  <div class="grab"></div>
+  <div class="head"><h3>Objetivo diario</h3><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+  <div class="goal"><input id="goalIn" type="number" inputmode="numeric" min="800" max="6000" step="50"><span>kcal</span></div>
+  <button class="save" id="goalSave">Guardar objetivo</button>
+</div>
+
+<script type="module">
+import { env, AutoTokenizer, CLIPTextModelWithProjection, AutoProcessor, CLIPVisionModelWithProjection, RawImage }
+  from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+env.allowLocalModels = false;
+env.useBrowserCache = true;
+const MODEL = 'Xenova/clip-vit-base-patch32';
+
+// [nombre, prompt en inglés para la IA, kcal/100g, carbohidratos, proteínas, grasas (g/100g), ración típica en g]
+const RAW = [
+['Tortilla de patatas','spanish potato omelette tortilla de patatas',197,13,6.5,13.5,150],
+['Tortilla francesa','plain french omelette',154,1,11,12,120],
+['Huevos fritos','fried eggs',196,0.8,13.6,15,100],
+['Huevos revueltos','scrambled eggs',149,1.6,10,11,150],
+['Paella','seafood paella rice',158,20,9,4.5,350],
+['Arroz blanco','plain white rice',130,28,2.7,0.3,200],
+['Arroz a la cubana','white rice with fried egg and tomato sauce',160,22,5,6,350],
+['Arroz frito','fried rice',170,26,4.5,5.5,300],
+['Risotto','risotto',140,20,4,5,350],
+['Lentejas','lentil stew',116,14,7,3,350],
+['Garbanzos / cocido','chickpea stew',140,15,8,5,350],
+['Alubias / fabada','white bean stew with chorizo',160,13,9,8,350],
+['Ensalada mixta','green salad with lettuce and tomato',45,4,1.5,2.5,200],
+['Ensalada César','caesar salad',150,6,7,11,250],
+['Ensalada de pasta','pasta salad',160,20,6,6,250],
+['Ensalada de quinoa','quinoa salad',140,18,5,5,250],
+['Poke bowl','poke bowl',140,17,8,4,400],
+['Espaguetis boloñesa','spaghetti bolognese',150,19,7,5,350],
+['Pasta carbonara','pasta carbonara',190,22,8,8,350],
+['Pasta al pesto','pasta with pesto',200,25,6,8.5,300],
+['Macarrones con tomate','macaroni with tomato sauce',140,24,5,3,350],
+['Lasaña','lasagna',135,13,8,6,350],
+['Canelones','cannelloni',140,13,7,7,300],
+['Pizza','pizza',266,33,11,10,300],
+['Hamburguesa','hamburger',254,24,13,12,220],
+['Perrito caliente','hot dog',290,24,10,17,120],
+['Kebab','doner kebab',215,18,13,10,300],
+['Tacos','tacos',220,20,10,11,200],
+['Burrito','burrito',200,24,8,7,300],
+['Sushi','sushi',150,28,6,1.5,250],
+['Ramen','ramen noodle soup',90,11,4.5,3,500],
+['Fideos salteados (wok)','stir fried noodles',170,24,6,6,350],
+['Curry con arroz','curry with rice',150,18,6,6,400],
+['Patatas fritas','french fries',312,41,3.4,15,150],
+['Patatas bravas','patatas bravas fried potatoes with spicy sauce',210,25,3,11,200],
+['Puré de patatas','mashed potatoes',88,15,2,2.5,200],
+['Pollo asado','roast chicken',215,0,27,12,200],
+['Pechuga a la plancha','grilled chicken breast',165,0,31,3.6,150],
+['Pollo frito / nuggets','fried chicken',290,10,24,17,200],
+['Filete de ternera','beef steak',250,0,26,16,200],
+['Chuletas de cerdo','pork chops',231,0,25,14,200],
+['Costillas barbacoa','barbecue ribs',290,5,20,21,250],
+['Albóndigas en salsa','meatballs in sauce',190,8,12,12,250],
+['Chorizo / salchichas','sausages',300,2,14,26,120],
+['Jamón serrano','sliced cured ham',240,0.5,31,13,60],
+['Queso','cheese',380,1,25,31,50],
+['Salmón a la plancha','grilled salmon fillet',208,0,20,13,150],
+['Pescado blanco (merluza)','white fish fillet',90,0,18,1.5,180],
+['Bacalao','cod fish dish',120,3,20,3,200],
+['Pescado frito','fried fish',230,10,18,13,200],
+['Gambas / langostinos','shrimp prawns',99,0.2,24,0.3,150],
+['Calamares fritos','fried calamari rings',175,8,18,7.5,150],
+['Mejillones','mussels',172,7,24,4.5,200],
+['Pulpo a la gallega','octopus with paprika and potatoes',120,8,14,4,250],
+['Croquetas','croquettes',230,20,7,14,120],
+['Empanada','empanada pastry',300,30,9,16,150],
+['Quiche','quiche',260,18,9,17,150],
+['Pimientos de Padrón','fried green peppers',80,5,1.5,6,150],
+['Verduras salteadas','sauteed vegetables',65,8,2,3,200],
+['Pisto','ratatouille vegetable stew',70,7,1.5,4,250],
+['Crema de verduras','vegetable cream soup',50,6,1.5,2.5,300],
+['Gazpacho','gazpacho cold tomato soup',40,4,1,2.5,250],
+['Sopa de fideos','noodle soup',45,6,2.5,1.2,300],
+['Hummus','hummus',177,14,8,10,100],
+['Bocadillo de jamón','baguette sandwich with ham',260,30,14,9,200],
+['Sándwich mixto','toasted ham and cheese sandwich',280,27,14,13,150],
+['Pan','bread',265,49,9,3.2,60],
+['Tostada con tomate','toast with tomato and olive oil',230,32,6,9,100],
+['Tostada de aguacate','avocado toast',200,20,5,11,150],
+['Cereales con leche','bowl of cereal with milk',110,18,4,2.5,250],
+['Avena / porridge','oatmeal porridge',90,15,3.5,2,250],
+['Yogur con fruta','yogurt with fruit',85,12,4,2.5,200],
+['Tortitas / pancakes','pancakes',227,28,6,10,150],
+['Croissant','croissant',406,46,8,21,60],
+['Magdalena / muffin','muffin',377,50,5,18,70],
+['Donut','donut',420,50,5,22,60],
+['Galletas','cookies',480,65,6,22,40],
+['Chocolate','chocolate bar',540,58,7,31,40],
+['Tarta / pastel','slice of cake',370,50,5,17,100],
+['Helado','ice cream',207,24,3.5,11,100],
+['Flan','flan caramel custard',140,22,4,4,120],
+['Churros','churros',400,45,5,22,100],
+['Manzana','apple',52,14,0.3,0.2,180],
+['Plátano','banana',89,23,1.1,0.3,120],
+['Naranja','orange',47,12,0.9,0.1,180],
+['Fresas','strawberries',32,7.7,0.7,0.3,150],
+['Uvas','grapes',69,18,0.7,0.2,150],
+['Sandía','watermelon',30,7.5,0.6,0.2,300],
+['Macedonia de frutas','fruit salad',50,13,0.6,0.2,200],
+['Aguacate','avocado',160,8.5,2,15,100],
+['Frutos secos','mixed nuts',607,21,20,54,30],
+['Café con leche','cup of coffee with milk',40,4.5,2.5,1.5,200],
+['Batido de frutas','fruit smoothie',60,13,1,0.5,300],
+['Cerveza','glass of beer',43,3.6,0.5,0,330],
+['Vino tinto','glass of red wine',85,2.6,0.1,0,150],
+['Refresco','glass of soda',42,10.6,0,0,330],
+];
+const FOODS = RAW.map(([n,en,kcal,c,p,f,g],id)=>({id,n,en,kcal,c,p,f,g}));
+const SIG = 'v1-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
+const EMB_KEY = 'cal_textemb', DIARY_KEY = 'cal_diario', GOAL_KEY = 'cal_objetivo';
+
+const $ = id => document.getElementById(id);
+const statusEl = $('status');
+let textEmb = null, vision = null, processor = null, ready = null;
+let plate = [], thumb = null;
+
+// ---------- IA en el dispositivo ----------
+const norm = a => { let s=0; for (const v of a) s+=v*v; s=Math.sqrt(s)||1; return a.map(v=>v/s); };
+const dot = (a,b) => { let s=0; for (let i=0;i<a.length;i++) s+=a[i]*b[i]; return s; };
+const files = {};
+const progress = p => {
+  if (p.status === 'progress' && p.total) {
+    files[p.file] = [p.loaded, p.total];
+    const v = Object.values(files), l = v.reduce((s,x)=>s+x[0],0), t = v.reduce((s,x)=>s+x[1],0);
+    $('dl').hidden = false; $('dlfill').style.width = (100*l/t).toFixed(0)+'%';
+    statusEl.textContent = `Descargando IA: ${(l/1e6).toFixed(0)} de ${(t/1e6).toFixed(0)} MB · solo la primera vez`;
+  }
+};
+async function loadText(){
+  try { const c = JSON.parse(localStorage.getItem(EMB_KEY)||'null'); if (c && c.sig===SIG) { textEmb = c.e; return; } } catch {}
+  const tok = await AutoTokenizer.from_pretrained(MODEL);
+  const tm = await CLIPTextModelWithProjection.from_pretrained(MODEL, { dtype:'q8', progress_callback: progress });
+  const { text_embeds } = await tm(tok(FOODS.map(f=>`a photo of ${f.en}, a type of food.`), { padding:true, truncation:true }));
+  textEmb = text_embeds.tolist().map(norm);
+  try { localStorage.setItem(EMB_KEY, JSON.stringify({ sig:SIG, e:textEmb.map(r=>r.map(v=>+v.toFixed(4))) })); } catch {}
+  try { await tm.dispose(); } catch {}
+}
+async function loadVision(){
+  processor = await AutoProcessor.from_pretrained(MODEL);
+  vision = await CLIPVisionModelWithProjection.from_pretrained(MODEL, { dtype:'q8', progress_callback: progress });
+}
+function init(){
+  if (!ready) ready = (async () => {
+    statusEl.textContent = 'Cargando la IA en tu móvil…';
+    await loadText(); await loadVision();
+    $('dl').hidden = true;
+    statusEl.textContent = 'IA lista · sin conexión a la nube';
+  })().catch(e => { ready = null; $('dl').hidden = true; statusEl.textContent = 'No se pudo cargar la IA (' + e.message + '). Puedes buscar a mano.'; throw e; });
+  return ready;
+}
+
+async function imageToCanvas(file){
+  const url = URL.createObjectURL(file);
+  $('preview').src = url;
+  const img = new Image(); img.src = url; await img.decode();
+  const s = Math.min(1, 448 / Math.min(img.naturalWidth, img.naturalHeight));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(img.naturalWidth*s); cv.height = Math.round(img.naturalHeight*s);
+  cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+  // miniatura para el diario
+  const t = document.createElement('canvas'), side = Math.min(cv.width, cv.height);
+  t.width = t.height = 96;
+  t.getContext('2d').drawImage(cv, (cv.width-side)/2, (cv.height-side)/2, side, side, 0, 0, 96, 96);
+  thumb = t.toDataURL('image/jpeg', .7);
+  return cv;
+}
+
+async function analyze(file){
+  if (!file) return;
+  plate = []; renderPlate();
+  openSheet('sheetPlate');
+  $('sugList').innerHTML = '<span class="chip"><b>Analizando…</b><span>en tu móvil</span></span>';
+  $('scanBox').classList.add('busy');
+  const cv = await imageToCanvas(file);
+  try { await init(); } catch { $('sugList').innerHTML = ''; $('scanBox').classList.remove('busy'); return; }
+  const t0 = performance.now();
+  const { image_embeds } = await vision(await processor(RawImage.fromCanvas(cv)));
+  const v = norm(Array.from(image_embeds.data));
+  const logits = textEmb.map(t => 100*dot(t, v)), m = Math.max(...logits);
+  const ex = logits.map(l => Math.exp(l-m)), sum = ex.reduce((a,b)=>a+b,0);
+  const ranked = ex.map((e,i)=>({ i, p:e/sum })).sort((a,b)=>b.p-a.p).slice(0,6);
+  $('scanBox').classList.remove('busy');
+  statusEl.textContent = `Analizado en ${((performance.now()-t0)/1000).toFixed(1)} s · sin nube`;
+  $('sugList').innerHTML = ranked.map(r => `<button class="chip" data-id="${r.i}"><b>${FOODS[r.i].n}</b><span>${(r.p*100).toFixed(0)}% · ${FOODS[r.i].kcal} kcal/100 g</span></button>`).join('');
+  if (ranked[0].p > 0.35) addItem(ranked[0].i);
+}
+$('cam').onchange = e => { analyze(e.target.files[0]); e.target.value=''; };
+$('gal').onchange = e => { analyze(e.target.files[0]); e.target.value=''; };
+$('btnGal2').onclick = () => $('gal').click();
+
+// ---------- Hojas ----------
+function openSheet(id){ document.body.classList.add('open'); $(id).classList.add('show'); }
+function closeSheets(){ document.body.classList.remove('open'); document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show')); }
+$('scrim').onclick = closeSheets;
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeSheets);
+
+// ---------- Búsqueda ----------
+const strip = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+$('buscar').oninput = e => {
+  const q = strip(e.target.value.trim());
+  $('busList').innerHTML = !q ? '' : FOODS.filter(f => strip(f.n).includes(q)).slice(0,8)
+    .map(f => `<button class="chip" data-id="${f.id}"><b>${f.n}</b><span>${f.kcal} kcal/100 g</span></button>`).join('');
+};
+$('sheetPlate').addEventListener('click', e => {
+  const c = e.target.closest('.chip[data-id]'); if (!c) return;
+  const id = +c.dataset.id, i = plate.findIndex(x=>x.id===id);
+  if (i >= 0) plate.splice(i,1); else addItem(id, true);
+  $('buscar').value=''; $('busList').innerHTML=''; renderPlate();
+});
+
+// ---------- Plato ----------
+function addItem(id, silent){ plate.push({ id, g: FOODS[id].g, m:1 }); if (!silent) renderPlate(); }
+const nutr = (id,g) => { const f = FOODS[id], k = g/100; return { kcal:f.kcal*k, c:f.c*k, p:f.p*k, f:f.f*k }; };
+const totals = items => items.reduce((t,x)=>{ const n = x.kcal!==undefined ? x : nutr(x.id,x.g); t.kcal+=n.kcal; t.c+=n.c; t.p+=n.p; t.f+=n.f; return t; }, {kcal:0,c:0,p:0,f:0});
+const pcts = t => { const kc=t.c*4, kp=t.p*4, kf=t.f*9, s=(kc+kp+kf)||1; return [100*kc/s, 100*kp/s, 100*kf/s]; };
+
+function renderPlate(){
+  document.querySelectorAll('#sugList .chip[data-id]').forEach(c => c.classList.toggle('on', plate.some(x=>x.id===+c.dataset.id)));
+  $('itemsCard').hidden = $('sumCard').hidden = !plate.length;
+  $('guardar').disabled = !plate.length;
+  $('items').innerHTML = plate.map((x,i) => {
+    const n = nutr(x.id, x.g);
+    return `<div class="it">
+      <div class="r"><b>${FOODS[x.id].n}</b><button class="x" data-del="${i}" aria-label="Quitar">✕</button></div>
+      <div class="r sub"><span id="g${i}">${x.g} g</span><span class="kc" id="k${i}">${n.kcal.toFixed(0)} kcal</span></div>
+      <input type="range" min="10" max="800" step="10" value="${x.g}" data-r="${i}">
+      <div class="seg">${[['Poco',.6],['Normal',1],['Mucho',1.5]].map(([l,m])=>`<button data-q="${i}" data-m="${m}" class="${x.m===m?'on':''}">${l}</button>`).join('')}</div>
+    </div>`;
+  }).join('');
+  renderSummary();
+}
+function renderSummary(){
+  const t = totals(plate), [pc,pp,pf] = pcts(t);
+  $('resumen').innerHTML = `<div class="tot"><span class="mut">Total del plato</span><b>${t.kcal.toFixed(0)} kcal</b></div>
+    <div class="stack"><i style="width:${pc}%"></i><i style="width:${pp}%"></i><i style="width:${pf}%"></i></div>
+    <div class="legend">
+      <span><i style="background:var(--c)"></i>Carbos ${pc.toFixed(0)}% <em>${t.c.toFixed(0)} g</em></span>
+      <span><i style="background:var(--p)"></i>Prot. ${pp.toFixed(0)}% <em>${t.p.toFixed(0)} g</em></span>
+      <span><i style="background:var(--f)"></i>Grasas ${pf.toFixed(0)}% <em>${t.f.toFixed(0)} g</em></span>
+    </div>`;
+}
+$('items').addEventListener('input', e => {
+  const i = e.target.dataset.r; if (i===undefined) return;
+  const x = plate[i]; x.g = +e.target.value; x.m = null;
+  $('g'+i).textContent = x.g+' g'; $('k'+i).textContent = nutr(x.id,x.g).kcal.toFixed(0)+' kcal';
+  e.target.nextElementSibling.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  renderSummary();
+});
+$('items').addEventListener('click', e => {
+  const d = e.target.dataset;
+  if (d.del !== undefined) { plate.splice(+d.del,1); renderPlate(); }
+  if (d.q !== undefined) { const x = plate[+d.q]; x.m = +d.m; x.g = Math.round(FOODS[x.id].g*x.m/10)*10; renderPlate(); }
+});
+
+// ---------- Diario y panel ----------
+const todayKey = () => new Date().toLocaleDateString('sv');
+const loadDiary = () => { try { return JSON.parse(localStorage.getItem(DIARY_KEY)) || {}; } catch { return {}; } };
+const saveDiary = d => { try { localStorage.setItem(DIARY_KEY, JSON.stringify(d)); } catch { alert('No queda espacio para guardar.'); } };
+const getGoal = () => +localStorage.getItem(GOAL_KEY) || 2000;
+
+$('guardar').onclick = () => {
+  if (!plate.length) return;
+  const d = loadDiary(), k = todayKey();
+  const items = plate.map(x => ({ n:FOODS[x.id].n, g:x.g, ...nutr(x.id,x.g) }));
+  (d[k] ||= []).push({ h:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}), img:thumb, items });
+  Object.keys(d).sort().slice(0,-30).forEach(x=>delete d[x]);
+  saveDiary(d); plate = []; closeSheets(); renderDash();
+};
+
+function ringArc(el, from, len, C){ el.style.strokeDasharray = `${Math.max(len,0)} ${C}`; el.style.strokeDashoffset = -from; el.style.opacity = len > 1 ? 1 : 0; }
+
+function miniRing(pct, color, name, grams){
+  const r = 34, C = 2*Math.PI*r;
+  return `<div><div class="mring"><svg width="84" height="84" viewBox="0 0 84 84">
+      <circle cx="42" cy="42" r="${r}" fill="none" stroke="#eef1ef" stroke-width="9"/>
+      <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/>
+    </svg><div>${pct.toFixed(0)}%</div></div><div class="mname">${name}</div><div class="mg">${grams.toFixed(0)} g</div></div>`;
+}
+
+function renderDash(){
+  const d = new Date();
+  const dia = d.toLocaleDateString('es-ES',{weekday:'long'});
+  $('fecha').innerHTML = `Hoy: <b>${dia}</b>`;
+  const meals = loadDiary()[todayKey()] || [], goal = getGoal();
+  const t = totals(meals.flatMap(m=>m.items)), cons = Math.round(t.kcal), left = goal - cons;
+  $('disp').textContent = Math.abs(left).toLocaleString('es-ES');
+  $('dispLbl').textContent = left >= 0 ? 'disponibles actualmente' : 'por encima del objetivo';
+  $('sCons').textContent = cons.toLocaleString('es-ES');
+  $('sMeals').textContent = meals.length;
+  $('sGoal').textContent = goal.toLocaleString('es-ES');
+  // anillo: azul = consumido, verde = disponible
+  const C = 2*Math.PI*112, gap = 14, used = Math.min(cons/goal,1);
+  const usedLen = used*C, restLen = (1-used)*C;
+  const usedEl = $('arcUsed'), restEl = $('arcRest');
+  usedEl.style.stroke = left < 0 ? '#ff6b6b' : '#4a6cf7';
+  ringArc(usedEl, 0, usedLen - (restLen>1 ? gap : 0), C);
+  ringArc(restEl, usedLen + (usedLen>1 ? gap/2 : 0), restLen - (usedLen>1 ? gap : 0), C);
+  // macros del día
+  const [pc,pp,pf] = pcts(t);
+  $('mrings').innerHTML = miniRing(pc,'#f5b13d','Carbohidratos',t.c) + miniRing(pp,'#4a6cf7','Proteínas',t.p) + miniRing(pf,'#ff6b6b','Grasas',t.f);
+  // comidas
+  $('hoy').innerHTML = !meals.length
+    ? '<div class="empty">Aún no has añadido comidas hoy.<br>Pulsa <b>Escanear plato</b> para empezar.</div>'
+    : meals.map((m,i) => { const mt = totals(m.items), [a,b,c] = pcts(mt); return `<div class="meal">
+        ${m.img ? `<img src="${m.img}" alt="">` : '<div class="ph">🍽️</div>'}
+        <div class="t"><div>${m.items.map(x=>x.n).join(', ')}</div><span>${m.h} · C ${a.toFixed(0)}% · P ${b.toFixed(0)}% · G ${c.toFixed(0)}%</span></div>
+        <div class="k">${mt.kcal.toFixed(0)}<span>kcal</span></div>
+        <button class="x" data-meal="${i}" aria-label="Borrar">✕</button></div>`; }).reverse().join('');
+}
+$('hoy').addEventListener('click', e => {
+  const i = e.target.dataset.meal; if (i===undefined) return;
+  if (!confirm('¿Borrar esta comida?')) return;
+  const d = loadDiary(); d[todayKey()].splice(+i,1); saveDiary(d); renderDash();
+});
+
+// objetivo
+$('btnGoal').onclick = () => { $('goalIn').value = getGoal(); openSheet('sheetGoal'); };
+$('goalSave').onclick = () => {
+  const v = Math.round(+$('goalIn').value);
+  if (v >= 800 && v <= 6000) { localStorage.setItem(GOAL_KEY, v); closeSheets(); renderDash(); }
+  else $('goalIn').focus();
+};
+
+renderDash();
+init().catch(()=>{});
+</script>
+</body>
+</html>
