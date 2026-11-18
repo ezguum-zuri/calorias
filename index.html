@@ -103,8 +103,8 @@ input{font:inherit;color:inherit}
 .fab2 svg{width:24px;height:24px;color:var(--g)}
 
 /* Hojas inferiores */
-.scrim{position:fixed;inset:0;background:rgba(10,20,15,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
-.open .scrim{opacity:1;pointer-events:auto}
+.scrim{position:fixed;inset:0;background-color:rgba(10,20,15,0);visibility:hidden;pointer-events:none;transition:background-color .25s,visibility 0s .25s;z-index:10}
+.open .scrim{background-color:rgba(10,20,15,.35);visibility:visible;pointer-events:auto;transition:background-color .25s}
 .sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:28px 28px 0 0;transform:translateY(105%);visibility:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),visibility 0s .35s;z-index:11;padding:10px 18px calc(env(safe-area-inset-bottom) + 20px)}
 .sheet.top2{z-index:13}
 .sheet.show{transform:none;visibility:visible;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
@@ -801,8 +801,10 @@ function closeSheet(id){
   $(id).classList.remove('show');
   const i = stack.indexOf(id); if (i >= 0) stack.splice(i,1);
   if (id === 'sheetBarcode') stopScanner();
-  if (!stack.length) document.body.classList.remove('open');
+  if (!stack.length) { document.body.classList.remove('open'); fixTopBar(); }
 }
+// iOS a veces deja la barra de arriba teñida de gris al cerrar una hoja: se fuerza a repintarla
+function fixTopBar(){ setTimeout(() => { const m = document.querySelector('meta[name=theme-color]'); if (m) { m.setAttribute('content', '#f4f7f6'); requestAnimationFrame(() => m.setAttribute('content', '#f4f7f5')); } }, 300); }
 function closeAll(){ [...stack].forEach(closeSheet); }
 $('scrim').onclick = () => stack.length && closeSheet(stack[stack.length-1]);
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeSheet(b.closest('.sheet').id));
