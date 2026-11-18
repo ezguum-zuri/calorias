@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Calorías">
 <meta name="theme-color" content="#f4f7f5">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Contador de calorías</title>
 <style>
 :root{
@@ -384,7 +388,9 @@ input{font:inherit;color:inherit}
     </ul></div></details>
 
   <details><summary>📱 Usarla como una app</summary><div class="body">
-    <p>En Safari: botón <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Se abrirá a pantalla completa, como una app más.</p></div></details>
+    <p><b>iPhone (Safari):</b> botón <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Hazlo antes de descargar la IA y ábrela siempre desde el icono: en iPhone el icono y Safari guardan los datos por separado.</p>
+    <p><b>Android (Chrome):</b> menú <b>⋮</b> → <b>Instalar aplicación</b> (o "Añadir a pantalla de inicio"). Aparecerá con su icono entre tus apps.</p>
+    <p>Las novedades llegan solas al abrirla; no hace falta reinstalar ni volver a descargar la IA.</p></div></details>
 
   <button class="save" data-close style="margin-top:8px">Entendido</button>
 </div></div>
@@ -1017,5 +1023,6 @@ renderDash();
 if (!localStorage.getItem('cal_ayuda_vista')) setTimeout(openHelp, 600);
 init().catch(()=>{});
 </script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
 </body>
 </html>
