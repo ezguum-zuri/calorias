@@ -37,34 +37,34 @@ input{font:inherit;color:inherit}
 .dlbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g),var(--g2));transition:width .2s}
 
 /* Anillo */
-.hero{position:relative;display:grid;place-items:center;margin:18px auto 4px;width:260px;height:260px}
-.hero > svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.hero{position:relative;display:grid;place-items:center;margin:8px auto 0;width:clamp(170px,23vh,260px);height:clamp(170px,23vh,260px)}
+.hero > svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .hero .ctr{text-align:center}
-.hero .ico{width:28px;height:28px;color:#cfd6d2;margin:0 auto 2px}
-.hero .num{font-size:58px;font-weight:300;letter-spacing:-2px;line-height:1}
-.hero .lbl{font-size:13px;color:var(--mut);margin-top:6px}
+.hero .ico{display:none}
+.hero .num{font-size:clamp(42px,6vh,58px);font-weight:300;letter-spacing:-2px;line-height:1}
+.hero .lbl{font-size:11.5px;color:var(--mut);margin-top:4px;white-space:nowrap}
 .hero circle{transition:stroke-dasharray .8s cubic-bezier(.2,.8,.2,1),stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
 
 /* Stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px;text-align:center}
-.stat .bub{width:58px;height:58px;border-radius:50%;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;margin:0 auto 8px}
-.stat .bub svg{width:26px;height:26px}
-.stat b{display:block;font-size:22px;font-weight:700}
-.stat span{font-size:12px;color:var(--mut)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 2px;text-align:center}
+.stat .bub{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;margin:0 auto 4px}
+.stat .bub svg{width:20px;height:20px}
+.stat b{display:block;font-size:20px;font-weight:700;line-height:1.2}
+.stat span{font-size:12px;color:var(--mut);line-height:1.2}
 
 /* Tarjetas */
-.card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:18px;margin:16px 0}
-.card h2{font-size:17px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--card);border-radius:24px;box-shadow:var(--sh);padding:16px 18px;margin:12px 0}
+.card h2{font-size:17px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
 .card h2 small{font-size:12px;color:var(--mut);font-weight:500}
 .mrings{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
-.mring{position:relative;width:84px;height:84px;margin:0 auto 6px}
-.mring svg{transform:rotate(-90deg)}
-.mring div{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:17px}
-.mname{font-size:13px;font-weight:600}
-.mg{font-size:12px;color:var(--mut)}
+.mring{position:relative;width:66px;height:66px;margin:0 auto 4px}
+.mring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mring div{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:15px}
+.mname{font-size:13px;font-weight:600;line-height:1.25}
+.mg{font-size:12px;color:var(--mut);line-height:1.25}
 .mring div.out{color:#e08a1e}
-.rng{font-size:11px;color:var(--mut);margin-top:2px}
-.bal{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:14px;font-weight:600;line-height:1.35}
+.rng{font-size:11px;color:var(--mut);margin-top:1px;line-height:1.25}
+.bal{margin-top:10px;padding:10px 14px;border-radius:14px;font-size:14px;font-weight:600;line-height:1.35}
 .bal.ok{background:#eefaf2;color:#256b43}
 .bal.warn{background:#fff4e5;color:#8a5a14}
 .bal.none{background:var(--bg);color:var(--mut);font-weight:500}
@@ -160,7 +160,7 @@ input{font:inherit;color:inherit}
 .save:disabled{opacity:.4;box-shadow:none}
 .link{display:block;margin:14px auto 0;border:0;background:none;color:var(--f);font-size:15px;font-weight:600}
 .mealSeg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 12px}
-.exbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:12px 16px;margin:10px 0 4px;font-size:15px;text-align:left}
+.exbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:10px 16px;margin:8px 0 2px;font-size:15px;text-align:left}
 .exbar b{font-weight:700}
 .exbar .add{color:var(--g);font-weight:700;font-size:14px;white-space:nowrap}
 .exacts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 12px}
@@ -1159,7 +1159,7 @@ function balance(t, scope){
 function miniRing(pct, color, name, grams, key){
   const r = 34, C = 2*Math.PI*r;
   const [lo,hi] = RANGES[key], out = grams > 0 && (pct < lo || pct > hi);
-  return `<div><div class="mring"><svg width="84" height="84" viewBox="0 0 84 84">
+  return `<div><div class="mring"><svg viewBox="0 0 84 84">
       <circle cx="42" cy="42" r="${r}" fill="none" stroke="#eef1ef" stroke-width="9"/>
       <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}" opacity="${pct > 0.5 ? 1 : 0}"/>
     </svg><div class="${out?'out':''}">${pct.toFixed(0)}%</div></div><div class="mname">${name}</div><div class="mg">${grams.toFixed(0)} g</div><div class="rng">ideal ${lo}–${hi} %</div></div>`;
