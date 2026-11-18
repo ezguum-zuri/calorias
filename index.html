@@ -159,7 +159,17 @@ input{font:inherit;color:inherit}
 .save{width:100%;height:56px;border:0;border-radius:28px;background:linear-gradient(135deg,var(--g),#2fa35e);color:#fff;font-weight:700;font-size:17px;margin-top:6px;box-shadow:0 10px 24px rgba(61,187,111,.3)}
 .save:disabled{opacity:.4;box-shadow:none}
 .link{display:block;margin:14px auto 0;border:0;background:none;color:var(--f);font-size:15px;font-weight:600}
-.mealSeg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0 12px}
+.mealSeg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 12px}
+.exbar{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:12px 16px;margin:10px 0 4px;font-size:15px;text-align:left}
+.exbar b{font-weight:700}
+.exbar .add{color:var(--g);font-weight:700;font-size:14px;white-space:nowrap}
+.exacts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 12px}
+.exacts button{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:10px;font-size:14px;text-align:left}
+.exacts button.on{background:var(--g);color:#fff;font-weight:600}
+.exlist .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.exlist .row:first-child{border-top:0}
+.exlist .row span{color:var(--mut);font-size:12px}
+.form input{width:100%;min-width:0;box-sizing:border-box}
 .mealSeg button{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:8px 2px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
 .mealSeg button i{font-style:normal;font-size:20px}
 .mealSeg button.on{background:var(--g);color:#fff;font-weight:600}
@@ -268,8 +278,9 @@ input{font:inherit;color:inherit}
   <div class="stats">
     <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#3dbb6f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-1.5-1.2-4-1.4-5.6 0C4.3 9 4.7 13 6.3 16c1.2 2.2 2.8 3.9 4.4 3.4.6-.2.9-.4 1.3-.4s.7.2 1.3.4c1.6.5 3.2-1.2 4.4-3.4 1.6-3 2-7-.1-9C16 5.6 13.5 5.8 12 7z"/><path d="M12 7c0-2 1-3.5 3-4"/></svg></div><b id="sCons">0</b><span>Consumidas</span></div>
     <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#4a6cf7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 3 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></svg></div><b id="sMeals">0</b><span>Comidas</span></div>
-    <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#1b1f1d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12l7-7M16 5h3v3"/></svg></div><b id="sGoal">2000</b><span>kcal objetivo</span></div>
+    <div class="stat"><div class="bub"><svg viewBox="0 0 24 24" fill="none" stroke="#1b1f1d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 12l7-7M16 5h3v3"/></svg></div><b id="sGoal">2000</b><span id="sGoalLbl">kcal objetivo</span></div>
   </div>
+  <button class="exbar" id="btnEx"><span>🏃 Ejercicio hoy: <b id="exToday">0 kcal</b></span><span class="add">＋ Añadir</span></button>
 
   <section class="card">
     <h2>Macronutrientes <small>% de la energía de hoy</small></h2>
@@ -427,6 +438,8 @@ input{font:inherit;color:inherit}
       <li>El anillo muestra las kcal que te quedan hoy: <span style="color:#4a6cf7">azul</span> lo comido, <span style="color:#3dbb6f">verde</span> lo disponible, <span style="color:#ff6b6b">rojo</span> si te pasas.</li>
       <li>Con el botón ☰ de arriba a la izquierda puedes <b>calcular tu objetivo</b> según sexo, edad, peso, altura, actividad y lo que buscas (perder, mantener o ganar), o ponerlo a mano. Por defecto son 2000 kcal.</li>
       <li>"Últimos 7 días" muestra cada día frente al objetivo, la media y los días cumplidos.</li>
+      <li><b>🏃 Ejercicio hoy:</b> añade lo que entrenas (trail, correr, bici…) y las kcal quemadas se suman a tu objetivo de ese día. Se calculan solas con el tiempo y tu peso, o pon las de tu reloj.</li>
+      <li>Lo que tomes entrenando (geles, barritas, isotónica…) guárdalo en el apartado <b>🏃 Entreno</b>.</li>
       <li>En <b>Macronutrientes</b> verás si vas <b>equilibrado</b> o si te pasas de hidratos, grasas o te falta proteína, con un consejo. Rangos orientativos: hidratos 45–60 %, proteínas 10–25 %, grasas 20–35 % de la energía. El mismo aviso aparece en cada plato antes de guardarlo.</li>
     </ul></div></details>
 
@@ -444,6 +457,23 @@ input{font:inherit;color:inherit}
     <p>Las novedades llegan solas al abrirla; no hace falta reinstalar ni volver a descargar la IA.</p></div></details>
 
   <button class="save" data-close style="margin-top:8px">Entendido</button>
+</div></div>
+
+<!-- Hoja: ejercicio -->
+<div class="sheet" id="sheetEx"><div class="sheet-inner">
+  <div class="grab"></div>
+  <div class="head"><h3>Ejercicio de hoy</h3><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+  <p class="hint" style="text-align:left;margin:0 0 6px">Las calorías que quemas se suman a tu objetivo de hoy, para que un día de entreno no parezca que te has pasado.</p>
+  <div class="sec">Actividad</div>
+  <div class="exacts" id="exActs"></div>
+  <div class="form">
+    <label>Duración (minutos)<input id="exMin" type="number" inputmode="numeric" min="1" max="1440" placeholder="90"></label>
+    <label>Tu peso (kg)<input id="exKg" type="number" inputmode="decimal" min="30" max="250" step="any" placeholder="70"></label>
+    <label class="full">Calorías quemadas (kcal)<input id="exKcal" type="number" inputmode="numeric" min="0" placeholder="se calcula sola"></label>
+  </div>
+  <p class="hint" style="text-align:left">Se calcula sola con la actividad, el tiempo y tu peso. Si tu reloj te da las calorías, escríbelas tal cual: será más exacto.<br>Ojo: si en la calculadora del objetivo elegiste un nivel de actividad que ya cuenta tus entrenos, apunta aquí solo los extra o los más largos, para no contarlo dos veces.</p>
+  <button class="save" id="exSave">Añadir ejercicio</button>
+  <div class="exlist card" id="exList" hidden></div>
 </div></div>
 
 <!-- Hoja: objetivo -->
@@ -657,7 +687,7 @@ const RAW = [
 ];
 const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
-const K = { emb:'cal_textemb', diary:'cal_diario', goal:'cal_objetivo', mine:'cal_propios', rec:'cal_recientes', fav:'cal_favoritos' };
+const K = { emb:'cal_textemb', diary:'cal_diario', goal:'cal_objetivo', mine:'cal_propios', rec:'cal_recientes', fav:'cal_favoritos', ex:'cal_ejercicio' };
 
 const $ = id => document.getElementById(id);
 const statusEl = $('status');
@@ -779,7 +809,7 @@ $('closeBarcode').onclick = () => closeSheet('sheetBarcode');
 $('closeNew').onclick = () => closeSheet('sheetNew');
 
 // ---------- Tipos de comida ----------
-const MEALS = [['desayuno','Desayuno','☕'],['comida','Comida','🍽️'],['merienda','Merienda','🥪'],['cena','Cena','🌙'],['picoteo','Picoteo','🍎']];
+const MEALS = [['desayuno','Desayuno','☕'],['comida','Comida','🍽️'],['merienda','Merienda','🥪'],['cena','Cena','🌙'],['entreno','Entreno','🏃'],['picoteo','Picoteo','🍎']];
 const mealInfo = t => MEALS.find(m => m[0] === t) || MEALS[1];
 // Horario de comidas de cada persona (se guarda en su móvil)
 const toMin = hhmm => { const [H,M] = String(hhmm).split(':').map(Number); return H*60 + (M||0); };
@@ -1128,7 +1158,9 @@ function miniRing(pct, color, name, grams, key){
 function renderDash(){
   const now = new Date();
   $('fecha').innerHTML = `Hoy: <b>${now.toLocaleDateString('es-ES',{weekday:'long'})}</b>`;
-  const diary = load(K.diary, {}), goal = getGoal();
+  const diary = load(K.diary, {}), baseGoal = getGoal(), exK = exToday(), goal = baseGoal + exK;
+  $('exToday').textContent = exK ? `${exK.toLocaleString('es-ES')} kcal` : '0 kcal';
+  $('sGoalLbl').textContent = exK ? `objetivo (+${exK.toLocaleString('es-ES')} ejercicio)` : 'kcal objetivo';
   if (diary[dayKey()]) { const merged = mergeDay(diary[dayKey()]); if (merged.length !== diary[dayKey()].length || merged.some(m => !m.t)) { diary[dayKey()] = merged; store(K.diary, diary); } }
   const meals = diary[dayKey()] || [];
   const t = totals(meals.flatMap(m=>m.items)), cons = r0(t.kcal), left = goal - cons;
@@ -1155,19 +1187,52 @@ function renderDash(){
         <div class="k">${r0(mt.kcal)}<span>kcal</span></div>
         <button class="x" data-meal="${i}" aria-label="Borrar">✕</button></div>`; }).join('')
       + '<p class="hint">Toca una comida para cambiar los gramos o los alimentos</p>';
-  renderWeek(diary, goal);
+  renderWeek(diary, baseGoal);
 }
 function renderWeek(diary, goal){
   const days = [];
-  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate()-i); const kcal = r0(totals((diary[dayKey(d)]||[]).flatMap(m=>m.items)).kcal); days.push({ d, kcal, today:i===0 }); }
+  const exAll = load(K.ex, {});
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate()-i); const kcal = r0(totals((diary[dayKey(d)]||[]).flatMap(m=>m.items)).kcal); const g = goal + (exAll[dayKey(d)]||[]).reduce((s,e)=>s+e.kcal,0); days.push({ d, kcal, g, today:i===0 }); }
   const max = Math.max(goal*1.15, ...days.map(x=>x.kcal));
   const H = 100; // px de barra máxima
   $('week').innerHTML = `<div class="goal-line" style="bottom:${(goal/max)*H + 20}px"><span>${goal}</span></div>` + days.map(x =>
-    `<div class="d"><span class="v">${x.kcal || ''}</span><div class="bar${x.kcal>goal?' over':''}${x.kcal?'':' zero'}" style="height:${Math.max(3,(x.kcal/max)*H)}px"></div><span class="lab${x.today?' today':''}">${x.d.toLocaleDateString('es-ES',{weekday:'short'}).slice(0,2)}</span></div>`).join('');
+    `<div class="d"><span class="v">${x.kcal || ''}</span><div class="bar${x.kcal>x.g?' over':''}${x.kcal?'':' zero'}" style="height:${Math.max(3,(x.kcal/max)*H)}px"></div><span class="lab${x.today?' today':''}">${x.d.toLocaleDateString('es-ES',{weekday:'short'}).slice(0,2)}</span></div>`).join('');
   const withData = days.filter(x=>x.kcal>0);
   const avg = withData.length ? r0(withData.reduce((s,x)=>s+x.kcal,0)/withData.length) : 0;
-  $('wsum').innerHTML = `<span>Media: <b>${avg.toLocaleString('es-ES')} kcal</b></span><span>Días en objetivo: <b>${withData.filter(x=>x.kcal<=goal).length} de ${withData.length}</b></span>`;
+  $('wsum').innerHTML = `<span>Media: <b>${avg.toLocaleString('es-ES')} kcal</b></span><span>Días en objetivo: <b>${withData.filter(x=>x.kcal<=x.g).length} de ${withData.length}</b></span>`;
 }
+
+// ---------- Ejercicio ----------
+// MET aproximados (gasto ≈ MET × kg × horas)
+const EXS = [['Trail / monte corriendo',9.5],['Correr',9.8],['Senderismo / monte',6],['Bicicleta',7.5],['Gimnasio / fuerza',5],['Natación',7],['Caminar',3.8],['Otro (pon las kcal)',0]];
+let exSel = 0;
+const exToday = () => (load(K.ex, {})[dayKey()] || []).reduce((s,e)=>s+e.kcal,0);
+function exCalc(){
+  const met = EXS[exSel][1], min = +$('exMin').value, kg = +$('exKg').value || +prof.w || 70;
+  if (met && min > 0) $('exKcal').placeholder = $('exKcal').value = r0((met - 1) * kg * min / 60); // neto: sin el gasto en reposo
+}
+function renderEx(){
+  $('exActs').innerHTML = EXS.map(([n],i) => `<button data-ex="${i}" class="${i===exSel?'on':''}">${n}</button>`).join('');
+  const list = load(K.ex, {})[dayKey()] || [];
+  $('exList').hidden = !list.length;
+  $('exList').innerHTML = list.map((e,i) => `<div class="row"><div>${esc(e.n)}<br><span>${e.min ? e.min+' min · ' : ''}${e.kcal.toLocaleString('es-ES')} kcal</span></div><button class="x" data-exdel="${i}" aria-label="Borrar">✕</button></div>`).join('');
+}
+$('btnEx').onclick = () => { $('exMin').value = ''; $('exKcal').value = ''; $('exKg').value = prof.w || ''; renderEx(); openSheet('sheetEx'); };
+$('exActs').onclick = e => { const b = e.target.closest('[data-ex]'); if (!b) return; exSel = +b.dataset.ex; renderEx(); exCalc(); };
+$('exMin').oninput = exCalc; $('exKg').oninput = exCalc;
+$('exSave').onclick = () => {
+  const kcal = Math.round(+$('exKcal').value);
+  if (!(kcal > 0)) return $(EXS[exSel][1] ? 'exMin' : 'exKcal').focus();
+  const all = load(K.ex, {}), k = dayKey();
+  (all[k] ||= []).push({ n:EXS[exSel][0].replace(' (pon las kcal)',''), min:+$('exMin').value || 0, kcal });
+  Object.keys(all).sort().slice(0,-60).forEach(x => delete all[x]);
+  store(K.ex, all); toast(`+${kcal.toLocaleString('es-ES')} kcal de ejercicio`);
+  $('exMin').value = ''; $('exKcal').value = ''; renderEx(); renderDash();
+};
+$('exList').onclick = e => {
+  const b = e.target.closest('[data-exdel]'); if (!b) return;
+  const all = load(K.ex, {}); all[dayKey()].splice(+b.dataset.exdel, 1); store(K.ex, all); renderEx(); renderDash();
+};
 
 // ---------- Objetivo ----------
 // Calculadora (Mifflin-St Jeor). El perfil se guarda en este móvil para no repetirlo.
