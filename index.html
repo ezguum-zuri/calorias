@@ -1182,7 +1182,7 @@ async function onCode(code){
   navigator.vibrate?.(60);
   $('bcmsg').textContent = `Código ${code}: buscando el producto…`;
   const known = findFood('o'+code);
-  if (known && 'u' in known) return gotProduct(known); // ya revisado: no hace falta internet
+  if (known && 'u' in known) return gotProduct(onzas(known)); // ya revisado: no hace falta internet
   try {
     const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_es,brands,nutriments,serving_quantity`);
     const j = await r.json();
@@ -1195,12 +1195,19 @@ async function onCode(code){
     const f = { k:'o'+code, n:name, kcal:+(+kcal).toFixed(1), c:+(+nm.carbohydrates_100g||0).toFixed(1), p:+(+nm.proteins_100g||0).toFixed(1), f:+(+nm.fat_100g||0).toFixed(1), g:serv || 100,
       // Si el envase indica la ración (un gel, una barrita, una lata…), se cuenta por unidades
       ...(serv > 0 && serv < 1000 ? { u:serv, un:'unidad|unidades' } : { u:0 }) };
-    gotProduct(f);
+    gotProduct(onzas(f));
   } catch {
-    if (known) return gotProduct(known);
+    if (known) return gotProduct(onzas(known));
     scanBusy = false;
     $('bcmsg').textContent = 'Sin conexión. Inténtalo de nuevo o crea el alimento a mano.';
   }
+}
+// Tabletas de chocolate: se cuentan por onzas (cacho de ~10 g), no por tableta entera
+function onzas(f){
+  const n = f.n || '';
+  if (/chocolat|cacao|cocoa/i.test(n) && !/soluble|bebida|batido|polvo|drink|helado|galleta|cereal|crema|leche con|gel|barrit|prote|yogur|natillas|mousse|bizcocho|magdalena|cookie/i.test(n) && (!f.u || f.u >= 50))
+    return { ...f, g:10, u:10, un:'onza|onzas' };
+  return f;
 }
 function gotProduct(f){
   // Actualiza el favorito guardado con los datos nuevos (p. ej. contar por unidades)
