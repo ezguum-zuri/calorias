@@ -164,6 +164,18 @@ input{font:inherit;color:inherit}
 .codein input{flex:1;border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:12px;font-size:16px;outline:none}
 .codein button{border:0;border-radius:14px;background:var(--g);color:#fff;font-weight:700;padding:0 18px}
 .foot{color:var(--mut);font-size:12px;text-align:center;margin:18px 6px}
+.foot a{color:var(--g);font-weight:600}
+.topR{display:flex;gap:8px}
+.help details{background:var(--card);box-shadow:var(--sh);border-radius:16px;margin-bottom:10px;padding:0 16px}
+.help summary{list-style:none;padding:14px 0;font-weight:700;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.help summary::-webkit-details-marker{display:none}
+.help summary::after{content:"\203A";font-size:22px;color:var(--mut);transition:transform .2s}
+.help details[open] summary::after{transform:rotate(90deg)}
+.help .body{padding:0 0 14px;font-size:14px;line-height:1.5;color:#3a423e}
+.help .body p{margin:0 0 8px}
+.help .body ul{margin:0 0 8px;padding-left:18px}
+.help .body li{margin-bottom:4px}
+.help .intro{font-size:14px;color:var(--mut);margin:0 0 14px}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%) translateY(20px);background:#1b1f1d;color:#fff;padding:10px 16px;border-radius:14px;font-size:14px;opacity:0;transition:.25s;z-index:20;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%)}
 </style>
@@ -175,9 +187,12 @@ input{font:inherit;color:inherit}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
     </button>
     <h1 id="fecha">Hoy</h1>
+    <div class="topR">
+    <button class="icon-btn" id="btnHelp" aria-label="Cómo funciona" style="font-weight:800;font-size:18px">?</button>
     <button class="icon-btn" id="btnGal2" aria-label="Elegir foto de la galería">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>
     </button>
+    </div>
   </div>
   <p id="status">Preparando…</p>
   <div class="dlbar" id="dl" hidden><i id="dlfill"></i></div>
@@ -220,7 +235,7 @@ input{font:inherit;color:inherit}
     <div class="wsum" id="wsum"></div>
   </section>
 
-  <p class="foot">Las fotos se analizan en tu propio móvil y no salen de él. La primera vez se descarga el modelo de IA (~155 MB, mejor con wifi) y queda guardado. Los códigos de barras se consultan en Open Food Facts (necesita internet). Las calorías son estimaciones: ajusta los gramos para afinar.</p>
+  <p class="foot">Las fotos se analizan en tu propio móvil y no salen de él. La primera vez se descarga el modelo de IA (~155 MB, mejor con wifi) y queda guardado. Los códigos de barras se consultan en Open Food Facts (necesita internet). Las calorías son estimaciones: ajusta los gramos para afinar.<br><a href="#" id="footHelp">¿Cómo funciona?</a></p>
 </main>
 
 <div class="dock">
@@ -305,6 +320,69 @@ input{font:inherit;color:inherit}
     <label class="full">Grasas (g)<input id="qkF" type="number" inputmode="decimal" step="any"></label>
   </div>
   <button class="save" id="qkSave" style="margin-top:16px">Añadir al plato</button>
+</div></div>
+
+<!-- Hoja: ayuda -->
+<div class="sheet" id="sheetHelp"><div class="sheet-inner help">
+  <div class="grab"></div>
+  <div class="head"><h3>Cómo funciona</h3><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+  <p class="intro">Apunta lo que comes y la app calcula las calorías y el reparto de hidratos, proteínas y grasas. Toca cada apartado para verlo.</p>
+
+  <details open><summary>📸 Escanear un plato</summary><div class="body">
+    <p>Pulsa <b>Escanear plato</b> y haz la foto (o usa el botón de la galería, arriba a la derecha).</p>
+    <ul>
+      <li>La IA te propone los platos más probables. Si está bastante segura, añade el primero sola.</li>
+      <li>Toca las fichas para añadir o quitar alimentos. Si no acierta, búscalo en el buscador.</li>
+      <li>La foto <b>no sale de tu móvil</b>: la IA funciona dentro del teléfono.</li>
+      <li>La primera vez descarga la IA (~155 MB). Hazlo con wifi; luego queda guardada.</li>
+    </ul></div></details>
+
+  <details><summary>➕ Añadir sin foto</summary><div class="body">
+    <p>Pulsa el botón <b>＋</b> (abajo a la derecha) y elige cómo:</p>
+    <ul>
+      <li><b>Buscar:</b> escribe el nombre (pan, manzana, lentejas…).</li>
+      <li><b>⭐ Favoritos y 🕘 Recientes:</b> lo que comes a menudo, a un toque.</li>
+      <li><b>Código de barras:</b> apunta al envase y busca el producto en Open Food Facts (necesita internet). Si no lo lee, escribe el número.</li>
+      <li><b>Crear alimento:</b> copia los datos de la etiqueta (por 100 g). Queda guardado en "Mis alimentos".</li>
+      <li><b>⚡ Kcal rápidas:</b> cuando ya sabes las calorías (un menú, un plato de restaurante). Los macros son opcionales.</li>
+    </ul>
+    <p>En un mismo plato puedes mezclar varias cosas: por ejemplo bonito (código de barras) + pan + una fruta.</p></div></details>
+
+  <details><summary>⚖️ Ajustar la cantidad</summary><div class="body">
+    <ul>
+      <li><b>Poco / Normal / Mucho:</b> 60 %, 100 % o 150 % de una ración típica.</li>
+      <li><b>La barra</b> o <b>escribir los gramos</b> para afinar.</li>
+      <li>Las kcal y los porcentajes se recalculan al momento.</li>
+      <li>La cantidad es lo que más cambia el resultado: la foto no puede medirla.</li>
+    </ul></div></details>
+
+  <details><summary>✏️ Guardar, editar y borrar</summary><div class="body">
+    <ul>
+      <li>Pulsa <b>Añadir a hoy</b> para guardar el plato.</li>
+      <li>Para <b>cambiar</b> una comida, tócala en "Comidas de hoy": puedes cambiar gramos, quitar o añadir alimentos.</li>
+      <li>Para <b>borrarla</b>, toca la ✕ de su derecha, o "Borrar esta comida" al editarla.</li>
+      <li>La ⭐ junto a un alimento lo guarda en favoritos.</li>
+    </ul></div></details>
+
+  <details><summary>🎯 Objetivo y resumen</summary><div class="body">
+    <ul>
+      <li>El anillo muestra las kcal que te quedan hoy: <span style="color:#4a6cf7">azul</span> lo comido, <span style="color:#3dbb6f">verde</span> lo disponible, <span style="color:#ff6b6b">rojo</span> si te pasas.</li>
+      <li>Cambia tu objetivo diario con el botón ☰ de arriba a la izquierda (por defecto 2000 kcal).</li>
+      <li>"Últimos 7 días" muestra cada día frente al objetivo, la media y los días cumplidos.</li>
+    </ul></div></details>
+
+  <details><summary>🔒 Tus datos</summary><div class="body">
+    <ul>
+      <li>Todo se guarda <b>solo en este móvil</b>, en el navegador. Cada persona tiene su propio diario.</li>
+      <li>Si borras los datos de Safari (Ajustes → Safari → Borrar historial y datos) se pierde el diario.</li>
+      <li>Solo se usa internet para descargar la IA la primera vez y para buscar códigos de barras.</li>
+      <li>Las calorías son estimaciones orientativas.</li>
+    </ul></div></details>
+
+  <details><summary>📱 Usarla como una app</summary><div class="body">
+    <p>En Safari: botón <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Se abrirá a pantalla completa, como una app más.</p></div></details>
+
+  <button class="save" data-close style="margin-top:8px">Entendido</button>
 </div></div>
 
 <!-- Hoja: objetivo -->
@@ -832,7 +910,7 @@ function miniRing(pct, color, name, grams){
   const r = 34, C = 2*Math.PI*r;
   return `<div><div class="mring"><svg width="84" height="84" viewBox="0 0 84 84">
       <circle cx="42" cy="42" r="${r}" fill="none" stroke="#eef1ef" stroke-width="9"/>
-      <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/>
+      <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}" opacity="${pct > 0.5 ? 1 : 0}"/>
     </svg><div>${pct.toFixed(0)}%</div></div><div class="mname">${name}</div><div class="mg">${grams.toFixed(0)} g</div></div>`;
 }
 function renderDash(){
@@ -881,7 +959,13 @@ $('goalSave').onclick = () => {
   else $('goalIn').focus();
 };
 
+// ---------- Ayuda ----------
+const openHelp = () => { openSheet('sheetHelp'); $('sheetHelp').scrollTop = 0; localStorage.setItem('cal_ayuda_vista', '1'); };
+$('btnHelp').onclick = openHelp;
+$('footHelp').onclick = e => { e.preventDefault(); openHelp(); };
+
 renderDash();
+if (!localStorage.getItem('cal_ayuda_vista')) setTimeout(openHelp, 600);
 init().catch(()=>{});
 </script>
 </body>
