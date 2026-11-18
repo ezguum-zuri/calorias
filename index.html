@@ -132,6 +132,9 @@ input{font:inherit;color:inherit}
 .star.on{color:#f5b13d}
 .gin{width:70px;border:1px solid var(--line);border-radius:10px;padding:4px 6px;text-align:right;background:var(--bg);font-size:14px}
 .seg{display:flex;background:var(--bg);border-radius:12px;padding:3px;gap:3px}
+.units{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:12px;padding:4px}
+.units button{width:44px;height:36px;border:0;border-radius:10px;background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:22px;font-weight:600;color:var(--g);line-height:1}
+.units span{font-weight:700;font-size:15px}
 .seg button{flex:1;border:0;background:none;border-radius:9px;padding:6px;font-size:13px;color:var(--mut)}
 .seg button.on{background:var(--card);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.08);font-weight:600}
 .tot{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
@@ -350,7 +353,8 @@ input{font:inherit;color:inherit}
 
   <details><summary>⚖️ Ajustar la cantidad</summary><div class="body">
     <ul>
-      <li><b>Poco / Normal / Mucho:</b> 60 %, 100 % o 150 % de una ración típica.</li>
+      <li><b>Por unidades (− 2 +):</b> en lo que se cuenta por piezas (mandarinas, tostadas, yogures, galletas, cucharadas de aceite…).</li>
+      <li><b>Poco / Normal / Mucho:</b> en los platos, 60 %, 100 % o 150 % de una ración típica.</li>
       <li><b>La barra</b> o <b>escribir los gramos</b> para afinar.</li>
       <li>Las kcal y los porcentajes se recalculan al momento.</li>
       <li>La cantidad es lo que más cambia el resultado: la foto no puede medirla.</li>
@@ -403,11 +407,11 @@ env.allowLocalModels = false;
 env.useBrowserCache = true;
 const MODEL = 'Xenova/clip-vit-base-patch32';
 
-// [nombre, descripción en inglés para la IA, kcal/100g, hidratos, proteínas, grasas (g/100g), ración típica en g]
+// [nombre, descripción en inglés para la IA, kcal/100g, hidratos, proteínas, grasas (g/100g), ración típica en g, g por unidad, unidad|plural]
 const RAW = [
 ['Tortilla de patatas','spanish potato omelette tortilla de patatas',197,13,6.5,13.5,150],
 ['Tortilla francesa','plain french omelette',154,1,11,12,120],
-['Huevos fritos','fried eggs',196,0.8,13.6,15,100],
+['Huevos fritos','fried eggs',196,0.8,13.6,15,100,50,'huevo|huevos'],
 ['Huevos revueltos','scrambled eggs',149,1.6,10,11,150],
 ['Paella','seafood paella rice',158,20,9,4.5,350],
 ['Arroz blanco','plain white rice',130,28,2.7,0.3,200],
@@ -432,8 +436,8 @@ const RAW = [
 ['Lasaña','lasagna',135,13,8,6,350],
 ['Canelones','cannelloni',140,13,7,7,300],
 ['Pizza','pizza',266,33,11,10,300],
-['Hamburguesa','hamburger',254,24,13,12,220],
-['Perrito caliente','hot dog',290,24,10,17,120],
+['Hamburguesa','hamburger',254,24,13,12,220,220,'unidad|unidades'],
+['Perrito caliente','hot dog',290,24,10,17,120,120,'unidad|unidades'],
 ['Kebab','doner kebab',215,18,13,10,300],
 ['Tacos','tacos',220,20,10,11,200],
 ['Burrito','burrito',200,24,8,7,300],
@@ -453,7 +457,7 @@ const RAW = [
 ['Costillas barbacoa','barbecue ribs',290,5,20,21,250],
 ['Albóndigas en salsa','meatballs in sauce',190,8,12,12,250],
 ['Chorizo / salchichas','sausages',300,2,14,26,120],
-['Jamón serrano','sliced cured ham',240,0.5,31,13,60],
+['Jamón serrano','sliced cured ham',240,0.5,31,13,60,15,'loncha|lonchas'],
 ['Queso','cheese',380,1,25,31,50],
 ['Salmón a la plancha','grilled salmon fillet',208,0,20,13,150],
 ['Pescado blanco (merluza)','white fish fillet',90,0,18,1.5,180],
@@ -467,10 +471,10 @@ const RAW = [
 ['Txangurro','spider crab gratin txangurro',160,4,15,9,200],
 ['Mejillones','mussels',172,7,24,4.5,200],
 ['Pulpo a la gallega','octopus with paprika and potatoes',120,8,14,4,250],
-['Gilda','gilda pintxo skewer with olive anchovy and green pepper',150,3,6,13,30],
-['Pintxo variado','basque pintxo on a slice of bread',250,25,10,12,80],
-['Croquetas','croquettes',230,20,7,14,120],
-['Empanada','empanada pastry',300,30,9,16,150],
+['Gilda','gilda pintxo skewer with olive anchovy and green pepper',150,3,6,13,30,30,'gilda|gildas'],
+['Pintxo variado','basque pintxo on a slice of bread',250,25,10,12,80,80,'pintxo|pintxos'],
+['Croquetas','croquettes',230,20,7,14,120,30,'croqueta|croquetas'],
+['Empanada','empanada pastry',300,30,9,16,150,150,'trozo|trozos'],
 ['Quiche','quiche',260,18,9,17,150],
 ['Pimientos de Padrón','fried green peppers',80,5,1.5,6,150],
 ['Verduras salteadas','sauteed vegetables',65,8,2,3,200],
@@ -479,49 +483,71 @@ const RAW = [
 ['Gazpacho','gazpacho cold tomato soup',40,4,1,2.5,250],
 ['Sopa de fideos','noodle soup',45,6,2.5,1.2,300],
 ['Hummus','hummus',177,14,8,10,100],
-['Bocadillo de jamón','baguette sandwich with ham',260,30,14,9,200],
-['Sándwich mixto','toasted ham and cheese sandwich',280,27,14,13,150],
-['Pan','bread',265,49,9,3.2,60],
-['Tostada con tomate','toast with tomato and olive oil',230,32,6,9,100],
-['Tostada de aguacate','avocado toast',200,20,5,11,150],
+['Bocadillo de jamón','baguette sandwich with ham',260,30,14,9,200,200,'bocadillo|bocadillos'],
+['Sándwich mixto','toasted ham and cheese sandwich',280,27,14,13,150,150,'sándwich|sándwiches'],
+['Pan','bread',265,49,9,3.2,60,30,'rebanada|rebanadas'],
+['Tostada con tomate','toast with tomato and olive oil',230,32,6,9,110,55,'tostada|tostadas'],
+['Tostada de aguacate','avocado toast',200,20,5,11,150,75,'tostada|tostadas'],
 ['Cereales con leche','bowl of cereal with milk',110,18,4,2.5,250],
 ['Avena / porridge','oatmeal porridge',90,15,3.5,2,250],
-['Yogur con fruta','yogurt with fruit',85,12,4,2.5,200],
+['Yogur con fruta','yogurt with fruit',85,12,4,2.5,125,125,'yogur|yogures'],
 ['Tortitas / pancakes','pancakes',227,28,6,10,150],
-['Croissant','croissant',406,46,8,21,60],
-['Bollo de mantequilla','brioche bun split and filled with buttercream',410,45,6,23,90],
-['Palmera de chocolate','large chocolate covered palmier puff pastry',520,55,6,31,100],
-['Carolina','carolina pastry with tall meringue cone coated in chocolate',380,62,5,13,80],
+['Croissant','croissant',406,46,8,21,60,60,'croissant|croissants'],
+['Bollo de mantequilla','brioche bun split and filled with buttercream',410,45,6,23,90,90,'bollo|bollos'],
+['Palmera de chocolate','large chocolate covered palmier puff pastry',520,55,6,31,100,100,'palmera|palmeras'],
+['Carolina','carolina pastry with tall meringue cone coated in chocolate',380,62,5,13,80,80,'carolina|carolinas'],
 ['Pantxineta','puff pastry tart filled with custard and topped with almonds',400,40,7,24,100],
 ['Goxua','goxua basque layered cream dessert in a glass',250,30,5,12,150],
-['Tarta de queso vasca','burnt basque cheesecake slice',330,22,7,24,120],
-['Magdalena / muffin','muffin',377,50,5,18,70],
-['Donut','donut',420,50,5,22,60],
-['Galletas','cookies',480,65,6,22,40],
+['Tarta de queso vasca','burnt basque cheesecake slice',330,22,7,24,120,120,'porción|porciones'],
+['Magdalena / muffin','muffin',377,50,5,18,70,70,'unidad|unidades'],
+['Donut','donut',420,50,5,22,60,60,'donut|donuts'],
+['Galletas','cookies',480,65,6,22,40,8,'galleta|galletas'],
 ['Chocolate','chocolate bar',540,58,7,31,40],
-['Tarta / pastel','slice of cake',370,50,5,17,100],
-['Helado','ice cream',207,24,3.5,11,100],
-['Flan','flan caramel custard',140,22,4,4,120],
+['Tarta / pastel','slice of cake',370,50,5,17,100,100,'porción|porciones'],
+['Helado','ice cream',207,24,3.5,11,100,100,'bola doble|bolas dobles'],
+['Flan','flan caramel custard',140,22,4,4,120,120,'flan|flanes'],
 ['Arroz con leche','rice pudding with cinnamon',130,22,3.5,3,150],
-['Churros','churros',400,45,5,22,100],
-['Manzana','apple',52,14,0.3,0.2,180],
-['Plátano','banana',89,23,1.1,0.3,120],
-['Naranja','orange',47,12,0.9,0.1,180],
+['Churros','churros',400,45,5,22,100,20,'churro|churros'],
+['Manzana','apple',52,14,0.3,0.2,180,180,'pieza|piezas'],
+['Plátano','banana',89,23,1.1,0.3,120,120,'pieza|piezas'],
+['Naranja','orange',47,12,0.9,0.1,180,180,'pieza|piezas'],
 ['Fresas','strawberries',32,7.7,0.7,0.3,150],
 ['Uvas','grapes',69,18,0.7,0.2,150],
 ['Sandía','watermelon',30,7.5,0.6,0.2,300],
 ['Macedonia de frutas','fruit salad',50,13,0.6,0.2,200],
 ['Aguacate','avocado',160,8.5,2,15,100],
-['Frutos secos','mixed nuts',607,21,20,54,30],
-['Café con leche','cup of coffee with milk',40,4.5,2.5,1.5,200],
+['Frutos secos','mixed nuts',607,21,20,54,30,30,'puñado|puñados'],
+['Café con leche','cup of coffee with milk',40,4.5,2.5,1.5,200,200,'taza|tazas'],
 ['Batido de frutas','fruit smoothie',60,13,1,0.5,300],
-['Cerveza','glass of beer',43,3.6,0.5,0,330],
-['Vino tinto','glass of red wine',85,2.6,0.1,0,150],
-['Txakoli / vino blanco','glass of white wine',82,2.6,0.1,0,150],
-['Sidra','glass of cider',40,3,0,0,200],
-['Refresco','glass of soda',42,10.6,0,0,330],
+['Cerveza','glass of beer',43,3.6,0.5,0,200,200,'caña|cañas'],
+['Vino tinto','glass of red wine',85,2.6,0.1,0,150,150,'copa|copas'],
+['Txakoli / vino blanco','glass of white wine',82,2.6,0.1,0,150,150,'copa|copas'],
+['Sidra','glass of cider',40,3,0,0,200,200,'vaso|vasos'],
+['Refresco','glass of soda',42,10.6,0,0,330,330,'lata|latas'],
+['Mandarina','small peeled tangerine mandarin',53,13.3,0.8,0.3,75,75,'mandarina|mandarinas'],
+['Kiwi','kiwi fruit',61,14.7,1.1,0.5,75,75,'kiwi|kiwis'],
+['Pera','pear',57,15,0.4,0.1,170,170,'pieza|piezas'],
+['Yogur natural','plain white yogurt cup',61,4.7,3.5,3.3,125,125,'yogur|yogures'],
+['Yogur desnatado','fat free plain yogurt cup',40,5.5,4.2,0.2,125,125,'yogur|yogures'],
+['Yogur griego','greek yogurt',122,4.5,3.8,10,125,125,'yogur|yogures'],
+['Leche semidesnatada','glass of milk',46,4.7,3.1,1.6,250,250,'vaso|vasos'],
+['Leche entera','glass of whole milk',64,4.7,3.1,3.6,250,250,'vaso|vasos'],
+['Zumo de naranja','glass of orange juice',45,10.4,0.7,0.2,200,200,'vaso|vasos'],
+['Café solo','espresso black coffee',2,0,0.1,0,50,50,'taza|tazas'],
+['Aceite de oliva','olive oil',884,0,0,100,10,10,'cucharada|cucharadas'],
+['Mantequilla','butter',717,0.1,0.9,81,10,10,'porción|porciones'],
+['Mermelada','jam',250,60,0.4,0.1,20,20,'cucharada|cucharadas'],
+['Galletas María','plain round maria biscuits',436,74,7,12,24,6,'galleta|galletas'],
+['Pan tostado','slice of toasted bread',300,55,10,3.5,60,30,'rebanada|rebanadas'],
+['Pan de molde integral','slice of whole wheat sandwich bread',250,41,10,4,60,30,'rebanada|rebanadas'],
+['Tostada con aceite','toast with olive oil',343,43,8,15.3,80,40,'tostada|tostadas'],
+['Tostada con mantequilla y mermelada','toast with butter and jam',330,48,6.5,12,100,50,'tostada|tostadas'],
+['Huevo cocido','boiled egg',155,1.1,13,11,55,55,'huevo|huevos'],
+['Fiambre de pavo','sliced turkey breast',105,2,18,2.5,45,15,'loncha|lonchas'],
+['Queso fresco','fresh white cheese',200,3,12,15,60,60,'porción|porciones'],
+['Cacao soluble con leche','glass of chocolate milk',80,11,3.4,2.4,250,250,'vaso|vasos'],
 ];
-const FOODS = RAW.map(([n,en,kcal,c,p,f,g],i)=>({k:'b'+i,n,en,kcal,c,p,f,g}));
+const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
 const K = { emb:'cal_textemb', diary:'cal_diario', goal:'cal_objetivo', mine:'cal_propios', rec:'cal_recientes', fav:'cal_favoritos' };
 
@@ -538,7 +564,10 @@ let textEmb = null, vision = null, processor = null, ready = null;
 let plate = [], thumb = null, editing = null; // editing = índice de comida de hoy
 
 // ---------- Catálogo ----------
-const snap = f => ({ k:f.k, n:f.n, kcal:+f.kcal||0, c:+f.c||0, p:+f.p||0, f:+f.f||0, g:+f.g||100 });
+const snap = f => ({ k:f.k, n:f.n, kcal:+f.kcal||0, c:+f.c||0, p:+f.p||0, f:+f.f||0, g:+f.g||100, ...(f.u ? { u:+f.u, un:f.un } : {}) });
+const nUnits = x => x.g / x.f.u;
+const fmtN = v => (Math.round(v*10)/10).toLocaleString('es-ES');
+const unitTxt = (f, g) => { const c = g / f.u, [s, pl] = (f.un || 'unidad|unidades').split('|'); return `${fmtN(c)} ${Math.abs(c - 1) < 0.01 ? s : (pl || s)}`; };
 function allFoods(){
   const map = new Map();
   for (const f of FOODS) map.set(f.k, f);
@@ -672,7 +701,7 @@ function renderQuick(){
   const recs = load(K.rec, []).slice(0, 12);
   $('favBox').hidden = !favs.length; $('recBox').hidden = !recs.length;
   $('favList').innerHTML = favs.map(f => chipHTML(f)).join('');
-  $('recList').innerHTML = recs.map(f => chipHTML(f, `${f.g} g · ${r0(f.kcal*f.g/100)} kcal`)).join('');
+  $('recList').innerHTML = recs.map(f => chipHTML(f, `${f.u ? unitTxt(f, f.g) : f.g + ' g'} · ${r0(f.kcal*f.g/100)} kcal`)).join('');
 }
 $('sheetPlate').addEventListener('click', e => {
   const c = e.target.closest('.chip[data-k]'); if (!c) return;
@@ -716,7 +745,8 @@ function renderPlate(){
         <button class="x" data-del="${i}" aria-label="Quitar">✕</button></span></div>
       <div class="r sub"><span><input class="gin" type="number" inputmode="numeric" min="1" max="3000" value="${x.g}" data-gi="${i}"> g</span><span class="kc" id="k${i}">${r0(n.kcal)} kcal</span></div>
       <input type="range" min="5" max="${Math.max(800, base*3)}" step="5" value="${x.g}" data-r="${i}">
-      <div class="seg">${[['Poco',.6],['Normal',1],['Mucho',1.5]].map(([l,m])=>`<button data-q="${i}" data-m="${m}" class="${x.m===m?'on':''}">${l}</button>`).join('')}</div>
+      ${x.f.u ? `<div class="units"><button data-ud="${i}" data-dir="-1" aria-label="Menos">−</button><span id="u${i}">${unitTxt(x.f, x.g)}</span><button data-ud="${i}" data-dir="1" aria-label="Más">+</button></div>`
+      : `<div class="seg">${[['Poco',.6],['Normal',1],['Mucho',1.5]].map(([l,m])=>`<button data-q="${i}" data-m="${m}" class="${x.m===m?'on':''}">${l}</button>`).join('')}</div>`}
     </div>`;
   }).join('');
   renderSummary();
@@ -737,6 +767,7 @@ function setGrams(i, g, from){
   if (from !== 'num') it.querySelector('.gin').value = x.g;
   if (from !== 'range') it.querySelector('input[type=range]').value = x.g;
   $('k'+i).textContent = r0(nutr(x.f,x.g).kcal)+' kcal';
+  if (x.f.u && $('u'+i)) $('u'+i).textContent = unitTxt(x.f, x.g);
   it.querySelectorAll('.seg button').forEach(b=>b.classList.remove('on'));
   renderSummary();
 }
@@ -752,15 +783,20 @@ $('items').addEventListener('click', e => {
   if (d.del !== undefined) { plate.splice(+d.del,1); renderPlate(); }
   if (d.fav !== undefined) toggleFav(plate[+d.fav].f);
   if (d.q !== undefined) { const x = plate[+d.q]; x.m = +d.m; x.g = Math.max(5, Math.round((+x.f.g||100)*x.m/5)*5); renderPlate(); }
+  if (d.ud !== undefined) {
+    const x = plate[+d.ud], c = nUnits(x), up = +d.dir > 0;
+    const nc = up ? (c < 1 ? Math.min(1, c + 0.5) : Math.floor(c + 0.001) + 1) : (c <= 1 ? 0.5 : Math.ceil(c - 0.001) - 1);
+    x.g = Math.round(nc * x.f.u * 10) / 10; x.m = null; renderPlate();
+  }
 });
 
 // ---------- Guardar / editar comidas ----------
 const dayKey = (d = new Date()) => d.toLocaleDateString('sv');
 const getGoal = () => +localStorage.getItem(K.goal) || 2000;
-const toDiaryItem = x => ({ k:x.f.k, n:x.f.n, g:x.g, per:{ kcal:x.f.kcal, c:x.f.c, p:x.f.p, f:x.f.f, g:x.f.g, q:x.f.q }, ...nutr(x.f, x.g) });
+const toDiaryItem = x => ({ k:x.f.k, n:x.f.n, g:x.g, per:{ kcal:x.f.kcal, c:x.f.c, p:x.f.p, f:x.f.f, g:x.f.g, q:x.f.q, u:x.f.u, un:x.f.un }, ...nutr(x.f, x.g) });
 const fromDiaryItem = it => {
   const per = it.per || { kcal:it.kcal*100/it.g, c:it.c*100/it.g, p:it.p*100/it.g, f:it.f*100/it.g, g:it.g };
-  return { f:{ k: it.k || ('h:'+it.n), n:it.n, kcal:per.kcal, c:per.c, p:per.p, f:per.f, g:per.g || it.g, q:per.q }, g:it.g, m:null };
+  return { f:{ k: it.k || ('h:'+it.n), n:it.n, kcal:per.kcal, c:per.c, p:per.p, f:per.f, g:per.g || it.g, q:per.q, u:per.u, un:per.un }, g:it.g, m:null };
 };
 
 $('guardar').onclick = () => {
