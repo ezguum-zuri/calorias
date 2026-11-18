@@ -62,6 +62,13 @@ input{font:inherit;color:inherit}
 .mring div{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;font-size:17px}
 .mname{font-size:13px;font-weight:600}
 .mg{font-size:12px;color:var(--mut)}
+.mring div.out{color:#e08a1e}
+.rng{font-size:11px;color:var(--mut);margin-top:2px}
+.bal{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:14px;font-weight:600;line-height:1.35}
+.bal.ok{background:#eefaf2;color:#256b43}
+.bal.warn{background:#fff4e5;color:#8a5a14}
+.bal.none{background:var(--bg);color:var(--mut);font-weight:500}
+.bal small{display:block;font-weight:500;opacity:.9;margin-top:4px;font-size:12.5px}
 .meal{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);cursor:pointer}
 .meal:first-child{border-top:0}
 .meal img,.meal .ph{width:52px;height:52px;border-radius:14px;object-fit:cover;background:#e9f6ee;flex:none;display:grid;place-items:center;font-size:22px}
@@ -267,6 +274,7 @@ input{font:inherit;color:inherit}
   <section class="card">
     <h2>Macronutrientes <small>% de la energía de hoy</small></h2>
     <div class="mrings" id="mrings"></div>
+    <div class="bal none" id="balance"></div>
   </section>
 
   <section class="card">
@@ -419,6 +427,7 @@ input{font:inherit;color:inherit}
       <li>El anillo muestra las kcal que te quedan hoy: <span style="color:#4a6cf7">azul</span> lo comido, <span style="color:#3dbb6f">verde</span> lo disponible, <span style="color:#ff6b6b">rojo</span> si te pasas.</li>
       <li>Con el botón ☰ de arriba a la izquierda puedes <b>calcular tu objetivo</b> según sexo, edad, peso, altura, actividad y lo que buscas (perder, mantener o ganar), o ponerlo a mano. Por defecto son 2000 kcal.</li>
       <li>"Últimos 7 días" muestra cada día frente al objetivo, la media y los días cumplidos.</li>
+      <li>En <b>Macronutrientes</b> verás si vas <b>equilibrado</b> o si te pasas de hidratos, grasas o te falta proteína, con un consejo. Rangos orientativos: hidratos 45–60 %, proteínas 10–25 %, grasas 20–35 % de la energía. El mismo aviso aparece en cada plato antes de guardarlo.</li>
     </ul></div></details>
 
   <details><summary>🔒 Tus datos</summary><div class="body">
@@ -630,6 +639,10 @@ const RAW = [
 ['Copos de avena','dry rolled oats flakes',379,60,13,7,40],
 ['Avena con leche','bowl of oats with milk',95,13,4.5,2.5,250],
 ['Bebida de avena','glass of oat milk',42,6.5,0.5,1.5,250,250,'vaso|vasos'],
+['Pan de bocadillo','half baguette bread for a sandwich',270,55,9,1.5,125,125,'media barra|medias barras'],
+['Pan de bocadillo integral','whole wheat baguette bread',250,45,10,3,125,125,'media barra|medias barras'],
+['Barra de pan','whole loaf of baguette bread',270,55,9,1.5,250,250,'barra|barras'],
+['Panecillo','small bread roll',275,54,9,2.5,60,60,'panecillo|panecillos'],
 ];
 const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
@@ -888,6 +901,8 @@ function renderSummary(){
       <span><i style="background:var(--p)"></i>Prot. ${pp.toFixed(0)}% <em>${t.p.toFixed(0)} g</em></span>
       <span><i style="background:var(--f)"></i>Grasas ${pf.toFixed(0)}% <em>${t.f.toFixed(0)} g</em></span>
     </div>`;
+  const bl = balance(t, 'plato');
+  if (bl.cls !== 'none' && t.c + t.p + t.f > 0) $('resumen').innerHTML += `<div class="bal ${bl.cls}">${bl.html}</div>`;
 }
 function setGrams(i, g, from){
   const x = plate[i]; x.g = Math.max(1, Math.min(3000, Math.round(g) || 1)); x.m = null;
@@ -1071,12 +1086,33 @@ function notFound(code, msg, name){
 
 // ---------- Panel ----------
 function ringArc(el, from, len, C){ el.style.strokeDasharray = `${Math.max(len,0)} ${C}`; el.style.strokeDashoffset = -from; el.style.opacity = len > 1 ? 1 : 0; }
-function miniRing(pct, color, name, grams){
+// Rangos orientativos de reparto de energía (adultos sanos; la proteína admite más si haces deporte)
+const RANGES = { c:[45,60], p:[10,25], f:[20,35] };
+function balance(t, scope){
+  if (t.kcal < 150) return { cls:'none', html:`Aún hay pocos datos para valorar el equilibrio${scope==='plato'?' del plato':' de hoy'}.` };
+  const [pc,pp,pf] = pcts(t), v = { c:pc, p:pp, f:pf };
+  const name = { c:'hidratos', p:'proteínas', f:'grasas' };
+  const tips = {
+    'f+':'Prueba a la plancha, al horno o al vapor y modera fritos, embutidos, salsas y bollería.',
+    'c+':'Equilibra con algo de proteína (huevo, pescado, carne magra, legumbre, yogur) y verdura.',
+    'p-':'Añade algo de proteína: huevo, pescado, pollo, legumbre o lácteos.',
+    'c-':'Puedes añadir fruta, pan integral, arroz, pasta o legumbre.',
+    'f-':'Un chorrito de aceite de oliva, aguacate o frutos secos completa bien.',
+    'p+':'Mucha proteína: acompaña con verdura, fruta o cereales integrales.' };
+  const issues = [];
+  for (const k of ['f','c','p']) { const [lo,hi] = RANGES[k]; if (v[k] > hi) issues.push([k,'+',v[k]-hi]); else if (v[k] < lo) issues.push([k,'-',lo-v[k]]); }
+  if (!issues.length) return { cls:'ok', html:`✅ ${scope==='plato'?'Plato equilibrado':'Vas equilibrado hoy'}<small>Hidratos, proteínas y grasas dentro de lo recomendado.</small>` };
+  issues.sort((a,b) => b[2]-a[2]);
+  const txt = issues.map(([k,s]) => `${s==='+'?'alto':'bajo'} en ${name[k]} (${v[k].toFixed(0)} %)`).join(', ').replace(/, ([^,]*)$/, ' y $1');
+  return { cls:'warn', html:`⚠️ ${scope==='plato'?'Este plato va':'Hoy vas'} ${txt}<small>${tips[issues[0][0]+issues[0][1]] || ''}</small>` };
+}
+function miniRing(pct, color, name, grams, key){
   const r = 34, C = 2*Math.PI*r;
+  const [lo,hi] = RANGES[key], out = grams > 0 && (pct < lo || pct > hi);
   return `<div><div class="mring"><svg width="84" height="84" viewBox="0 0 84 84">
       <circle cx="42" cy="42" r="${r}" fill="none" stroke="#eef1ef" stroke-width="9"/>
       <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}" opacity="${pct > 0.5 ? 1 : 0}"/>
-    </svg><div>${pct.toFixed(0)}%</div></div><div class="mname">${name}</div><div class="mg">${grams.toFixed(0)} g</div></div>`;
+    </svg><div class="${out?'out':''}">${pct.toFixed(0)}%</div></div><div class="mname">${name}</div><div class="mg">${grams.toFixed(0)} g</div><div class="rng">ideal ${lo}–${hi} %</div></div>`;
 }
 function renderDash(){
   const now = new Date();
@@ -1095,7 +1131,8 @@ function renderDash(){
   ringArc($('arcUsed'), 0, usedLen - (restLen>1 ? gap : 0), C);
   ringArc($('arcRest'), usedLen + (usedLen>1 ? gap/2 : 0), restLen - (usedLen>1 ? gap : 0), C);
   const [pc,pp,pf] = pcts(t);
-  $('mrings').innerHTML = miniRing(pc,'#f5b13d','Hidratos',t.c) + miniRing(pp,'#4a6cf7','Proteínas',t.p) + miniRing(pf,'#ff6b6b','Grasas',t.f);
+  $('mrings').innerHTML = miniRing(pc,'#f5b13d','Hidratos',t.c,'c') + miniRing(pp,'#4a6cf7','Proteínas',t.p,'p') + miniRing(pf,'#ff6b6b','Grasas',t.f,'f');
+  const bl = balance(t, 'dia'); $('balance').className = 'bal ' + bl.cls; $('balance').innerHTML = bl.html;
   const order = t => MEALS.findIndex(m => m[0] === t);
   $('hoy').innerHTML = !meals.length
     ? '<div class="empty">Aún no has añadido comidas hoy.<br>Pulsa <b>Escanear plato</b> o <b>＋</b> para empezar.</div>'
