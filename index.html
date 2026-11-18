@@ -152,6 +152,12 @@ input{font:inherit;color:inherit}
 .save{width:100%;height:56px;border:0;border-radius:28px;background:linear-gradient(135deg,var(--g),#2fa35e);color:#fff;font-weight:700;font-size:17px;margin-top:6px;box-shadow:0 10px 24px rgba(61,187,111,.3)}
 .save:disabled{opacity:.4;box-shadow:none}
 .link{display:block;margin:14px auto 0;border:0;background:none;color:var(--f);font-size:15px;font-weight:600}
+.mealSeg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:8px 0 12px}
+.mealSeg button{border:0;background:var(--card);box-shadow:var(--sh);border-radius:14px;padding:8px 2px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
+.mealSeg button i{font-style:normal;font-size:20px}
+.mealSeg button.on{background:var(--g);color:#fff;font-weight:600}
+.meal .t b{font-size:15px}
+.meal .t .names{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:#4a524e;font-weight:500}
 .goal{display:flex;align-items:center;gap:10px;margin:8px 0 16px}
 .calc .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
 .calc label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
@@ -301,6 +307,8 @@ input{font:inherit;color:inherit}
 
   <section class="card" id="itemsCard" hidden><div id="items"></div></section>
   <section class="card" id="sumCard" hidden><div id="resumen"></div></section>
+  <div class="sec">¿Qué comida es?</div>
+  <div class="mealSeg" id="mealSeg"></div>
   <button class="save" id="guardar" disabled>Añadir a hoy</button>
   <button class="link" id="borrarComida" hidden>Borrar esta comida</button>
 </div></div>
@@ -383,7 +391,8 @@ input{font:inherit;color:inherit}
 
   <details><summary>✏️ Guardar, editar y borrar</summary><div class="body">
     <ul>
-      <li>Pulsa <b>Añadir a hoy</b> para guardar el plato.</li>
+      <li>Antes de guardar, elige <b>qué comida es</b>: desayuno, comida, merienda, cena o picoteo. Se elige sola según la hora y puedes cambiarla.</li>
+      <li>Si añades más cosas a una comida que ya tienes (por ejemplo, un café a media mañana al desayuno), se suman a esa comida.</li>
       <li>Para <b>cambiar</b> una comida, tócala en "Comidas de hoy": puedes cambiar gramos, quitar o añadir alimentos.</li>
       <li>Para <b>borrarla</b>, toca la ✕ de su derecha, o "Borrar esta comida" al editarla.</li>
       <li>La ⭐ junto a un alimento lo guarda en favoritos.</li>
@@ -726,6 +735,30 @@ document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeSh
 $('closeBarcode').onclick = () => closeSheet('sheetBarcode');
 $('closeNew').onclick = () => closeSheet('sheetNew');
 
+// ---------- Tipos de comida ----------
+const MEALS = [['desayuno','Desayuno','☕'],['comida','Comida','🍽️'],['merienda','Merienda','🥪'],['cena','Cena','🌙'],['picoteo','Picoteo','🍎']];
+const mealInfo = t => MEALS.find(m => m[0] === t) || MEALS[1];
+const typeByTime = hhmm => { const [H,M] = String(hhmm).split(':').map(Number), m = H*60 + (M||0);
+  return m < 300 ? 'cena' : m < 690 ? 'desayuno' : m < 990 ? 'comida' : m < 1200 ? 'merienda' : 'cena'; };
+const nowHM = () => new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+const mealType = m => m.t || typeByTime(m.h);
+let mealSel = 'comida';
+function renderMealSeg(){
+  $('mealSeg').innerHTML = MEALS.map(([k,l,e]) => `<button data-mt="${k}" class="${k===mealSel?'on':''}"><i>${e}</i>${l}</button>`).join('');
+  $('guardar').textContent = editing !== null ? 'Guardar cambios' : `Añadir a ${mealInfo(mealSel)[1].toLowerCase()}`;
+}
+$('mealSeg').onclick = e => { const b = e.target.closest('[data-mt]'); if (!b) return; mealSel = b.dataset.mt; renderMealSeg(); };
+// Junta en una sola entrada lo que sea del mismo tipo de comida en un mismo día
+function mergeDay(arr){
+  const out = [];
+  for (const m of arr) {
+    const t = mealType(m), prev = out.find(x => x.t === t);
+    if (prev) { prev.items.push(...m.items); if (!prev.img && m.img) prev.img = m.img; }
+    else out.push({ ...m, t, items:[...m.items] });
+  }
+  return out;
+}
+
 function openPlate({ photo, meal }){
   editing = meal ?? null;
   if (editing === null) { plate = []; if (!photo) thumb = null; }
@@ -735,7 +768,8 @@ function openPlate({ photo, meal }){
   $('plateTitle').textContent = editing !== null ? 'Editar comida' : 'Tu plato';
   $('guardar').textContent = editing !== null ? 'Guardar cambios' : 'Añadir a hoy';
   $('borrarComida').hidden = editing === null;
-  renderQuick(); renderPlate();
+  mealSel = editing !== null ? mealType(load(K.diary, {})[dayKey()][editing]) : typeByTime(nowHM());
+  renderQuick(); renderPlate(); renderMealSeg();
   openSheet('sheetPlate');
   $('sheetPlate').scrollTop = 0;
 }
@@ -863,11 +897,12 @@ $('guardar').onclick = () => {
   const d = load(K.diary, {}), k = dayKey();
   const items = plate.map(toDiaryItem);
   d[k] ||= [];
-  if (editing !== null && d[k][editing]) d[k][editing].items = items;
-  else d[k].push({ h:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}), img:thumb, items });
+  if (editing !== null && d[k][editing]) { d[k][editing].items = items; d[k][editing].t = mealSel; }
+  else d[k].push({ h:nowHM(), t:mealSel, img:thumb, items });
+  d[k] = mergeDay(d[k]);
   Object.keys(d).sort().slice(0,-60).forEach(x=>delete d[x]);
   store(K.diary, d); remember(plate);
-  toast(editing !== null ? 'Comida actualizada' : 'Añadido a hoy');
+  toast(editing !== null ? 'Comida actualizada' : `Añadido a ${mealInfo(mealSel)[1].toLowerCase()}`);
   plate = []; editing = null; closeAll(); renderDash();
 };
 $('borrarComida').onclick = () => {
@@ -1011,12 +1046,14 @@ function miniRing(pct, color, name, grams){
 function renderDash(){
   const now = new Date();
   $('fecha').innerHTML = `Hoy: <b>${now.toLocaleDateString('es-ES',{weekday:'long'})}</b>`;
-  const diary = load(K.diary, {}), meals = diary[dayKey()] || [], goal = getGoal();
+  const diary = load(K.diary, {}), goal = getGoal();
+  if (diary[dayKey()]) { const merged = mergeDay(diary[dayKey()]); if (merged.length !== diary[dayKey()].length || merged.some(m => !m.t)) { diary[dayKey()] = merged; store(K.diary, diary); } }
+  const meals = diary[dayKey()] || [];
   const t = totals(meals.flatMap(m=>m.items)), cons = r0(t.kcal), left = goal - cons;
   $('disp').textContent = Math.abs(left).toLocaleString('es-ES');
   $('dispLbl').textContent = left >= 0 ? 'disponibles actualmente' : 'por encima del objetivo';
   $('sCons').textContent = cons.toLocaleString('es-ES');
-  $('sMeals').textContent = meals.length;
+  $('sMeals').textContent = new Set(meals.map(mealType)).size;
   $('sGoal').textContent = goal.toLocaleString('es-ES');
   const C = 2*Math.PI*112, gap = 14, used = Math.min(cons/goal,1), usedLen = used*C, restLen = (1-used)*C;
   $('arcUsed').style.stroke = left < 0 ? '#ff6b6b' : '#4a6cf7';
@@ -1024,13 +1061,16 @@ function renderDash(){
   ringArc($('arcRest'), usedLen + (usedLen>1 ? gap/2 : 0), restLen - (usedLen>1 ? gap : 0), C);
   const [pc,pp,pf] = pcts(t);
   $('mrings').innerHTML = miniRing(pc,'#f5b13d','Hidratos',t.c) + miniRing(pp,'#4a6cf7','Proteínas',t.p) + miniRing(pf,'#ff6b6b','Grasas',t.f);
+  const order = t => MEALS.findIndex(m => m[0] === t);
   $('hoy').innerHTML = !meals.length
     ? '<div class="empty">Aún no has añadido comidas hoy.<br>Pulsa <b>Escanear plato</b> o <b>＋</b> para empezar.</div>'
-    : meals.map((m,i) => { const mt = totals(m.items), [a,b,c] = pcts(mt); return `<div class="meal" data-i="${i}">
-        ${m.img ? `<img src="${m.img}" alt="">` : '<div class="ph">🍽️</div>'}
-        <div class="t"><div>${esc(m.items.map(x=>x.n).join(', '))}</div><span>${m.h} · H ${a.toFixed(0)}% · P ${b.toFixed(0)}% · G ${c.toFixed(0)}%</span></div>
+    : meals.map((m,i) => ({ m, i })).sort((x,y) => order(mealType(x.m)) - order(mealType(y.m))).map(({ m, i }) => {
+        const mt = totals(m.items), [a,b,c] = pcts(mt), [, label, emoji] = mealInfo(mealType(m));
+        return `<div class="meal" data-i="${i}">
+        ${m.img ? `<img src="${m.img}" alt="">` : `<div class="ph">${emoji}</div>`}
+        <div class="t"><b>${label}</b><span class="names">${esc(m.items.map(x=>x.n).join(', '))}</span><span>H ${a.toFixed(0)}% · P ${b.toFixed(0)}% · G ${c.toFixed(0)}%</span></div>
         <div class="k">${r0(mt.kcal)}<span>kcal</span></div>
-        <button class="x" data-meal="${i}" aria-label="Borrar">✕</button></div>`; }).reverse().join('')
+        <button class="x" data-meal="${i}" aria-label="Borrar">✕</button></div>`; }).join('')
       + '<p class="hint">Toca una comida para cambiar los gramos o los alimentos</p>';
   renderWeek(diary, goal);
 }
