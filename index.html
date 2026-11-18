@@ -116,6 +116,8 @@ input{font:inherit;color:inherit}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .tool{border:0;background:var(--card);box-shadow:var(--sh);border-radius:16px;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
 .tool svg{width:20px;height:20px;color:var(--g)}
+.tool.wide{grid-column:1/-1}
+.qk{display:flex;align-items:center;gap:6px;font-size:14px}
 .search{width:100%;margin-top:12px;padding:13px 16px;border-radius:16px;border:0;background:var(--card);box-shadow:var(--sh);font-size:16px;outline:none}
 #busList .chip{display:block;width:100%;max-width:none;margin-top:8px}
 .it{padding:12px 0;border-top:1px solid var(--line)}
@@ -251,6 +253,7 @@ input{font:inherit;color:inherit}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Crear alimento
     </button>
+    <button class="tool wide" id="btnQuick">⚡ Añadir kcal rápidas (sin buscar)</button>
   </div>
   <input class="search" id="buscar" type="search" placeholder="🔍  Buscar alimento…" autocomplete="off">
   <div id="busList"></div>
@@ -287,6 +290,21 @@ input{font:inherit;color:inherit}
   </div>
   <button class="save" id="nfSave" style="margin-top:16px">Guardar y añadir al plato</button>
   <div class="mine" id="mine"></div>
+</div></div>
+
+<!-- Hoja: kcal rápidas -->
+<div class="sheet top2" id="sheetQuick"><div class="sheet-inner">
+  <div class="grab"></div>
+  <div class="head"><h3>Kcal rápidas</h3><button class="icon-btn" id="closeQuick" aria-label="Cerrar">✕</button></div>
+  <p class="hint" style="text-align:left;margin:0 0 12px">Para cuando sabes las calorías (menú, etiqueta, app del restaurante…). Los macros son opcionales.</p>
+  <div class="form">
+    <label class="full">Qué es (opcional)<input id="qkName" placeholder="Ej.: Menú del día"></label>
+    <label class="full">Calorías (kcal)<input id="qkKcal" type="number" inputmode="numeric" step="any" placeholder="450"></label>
+    <label>Hidratos (g)<input id="qkC" type="number" inputmode="decimal" step="any"></label>
+    <label>Proteínas (g)<input id="qkP" type="number" inputmode="decimal" step="any"></label>
+    <label class="full">Grasas (g)<input id="qkF" type="number" inputmode="decimal" step="any"></label>
+  </div>
+  <button class="save" id="qkSave" style="margin-top:16px">Añadir al plato</button>
 </div></div>
 
 <!-- Hoja: objetivo -->
@@ -566,7 +584,8 @@ const strip = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 $('buscar').oninput = e => {
   const q = strip(e.target.value.trim());
   if (!q) { $('busList').innerHTML = ''; return; }
-  const res = [...allFoods().values()].filter(f => strip(f.n).includes(q)).slice(0,10);
+  const score = n => n === q ? 0 : n.startsWith(q) ? 1 : n.split(/[\s/()]+/).some(w => w.startsWith(q)) ? 2 : 3;
+  const res = [...allFoods().values()].filter(f => strip(f.n).includes(q)).sort((a,b) => score(strip(a.n)) - score(strip(b.n))).slice(0,10);
   $('busList').innerHTML = res.length ? res.map(f => chipHTML(f)).join('')
     : `<p class="hint">No está en la lista. Usa <b>Crear alimento</b> o el <b>código de barras</b>.</p>`;
 };
@@ -593,7 +612,7 @@ function toggleFav(f){
 }
 function remember(items){
   let rec = load(K.rec, []);
-  for (const x of items) { rec = rec.filter(r => r.k !== x.f.k); rec.unshift({ ...snap(x.f), g:x.g }); }
+  for (const x of items) { if (x.f.q) continue; rec = rec.filter(r => r.k !== x.f.k); rec.unshift({ ...snap(x.f), g:x.g }); }
   store(K.rec, rec.slice(0, 40));
 }
 
@@ -609,6 +628,10 @@ function renderPlate(){
   $('guardar').disabled = !plate.length;
   $('items').innerHTML = plate.map((x,i) => {
     const n = nutr(x.f, x.g), base = +x.f.g || 100;
+    if (x.f.q) return `<div class="it">
+      <div class="r"><b>⚡ ${esc(x.f.n)}</b><button class="x" data-del="${i}" aria-label="Quitar">✕</button></div>
+      <div class="r sub"><span class="qk"><input class="gin" type="number" inputmode="numeric" min="0" value="${r0(x.f.kcal)}" data-qk="${i}"> kcal</span><span>${x.f.c||x.f.p||x.f.f ? `H ${x.f.c} g · P ${x.f.p} g · G ${x.f.f} g` : 'sin macros'}</span></div>
+    </div>`;
     return `<div class="it">
       <div class="r"><b>${esc(x.f.n)}</b><span class="acts">
         <button class="star${isFav(x.f.k)?' on':''}" data-fav="${i}" aria-label="Favorito">${isFav(x.f.k)?'★':'☆'}</button>
@@ -643,6 +666,7 @@ $('items').addEventListener('input', e => {
   const d = e.target.dataset;
   if (d.r !== undefined) setGrams(+d.r, +e.target.value, 'range');
   if (d.gi !== undefined && e.target.value !== '') setGrams(+d.gi, +e.target.value, 'num');
+  if (d.qk !== undefined && e.target.value !== '') { plate[+d.qk].f.kcal = Math.max(0, +e.target.value); renderSummary(); }
 });
 $('items').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -655,10 +679,10 @@ $('items').addEventListener('click', e => {
 // ---------- Guardar / editar comidas ----------
 const dayKey = (d = new Date()) => d.toLocaleDateString('sv');
 const getGoal = () => +localStorage.getItem(K.goal) || 2000;
-const toDiaryItem = x => ({ k:x.f.k, n:x.f.n, g:x.g, per:{ kcal:x.f.kcal, c:x.f.c, p:x.f.p, f:x.f.f, g:x.f.g }, ...nutr(x.f, x.g) });
+const toDiaryItem = x => ({ k:x.f.k, n:x.f.n, g:x.g, per:{ kcal:x.f.kcal, c:x.f.c, p:x.f.p, f:x.f.f, g:x.f.g, q:x.f.q }, ...nutr(x.f, x.g) });
 const fromDiaryItem = it => {
   const per = it.per || { kcal:it.kcal*100/it.g, c:it.c*100/it.g, p:it.p*100/it.g, f:it.f*100/it.g, g:it.g };
-  return { f:{ k: it.k || ('h:'+it.n), n:it.n, kcal:per.kcal, c:per.c, p:per.p, f:per.f, g:per.g || it.g }, g:it.g, m:null };
+  return { f:{ k: it.k || ('h:'+it.n), n:it.n, kcal:per.kcal, c:per.c, p:per.p, f:per.f, g:per.g || it.g, q:per.q }, g:it.g, m:null };
 };
 
 $('guardar').onclick = () => {
@@ -690,6 +714,17 @@ $('hoy').addEventListener('click', e => {
   plate = meal.items.map(fromDiaryItem); thumb = meal.img;
   openPlate({ photo:false, meal:i });
 });
+
+// ---------- Kcal rápidas ----------
+$('btnQuick').onclick = () => { ['qkName','qkKcal','qkC','qkP','qkF'].forEach(id => $(id).value = ''); openSheet('sheetQuick'); setTimeout(() => $('qkKcal').focus(), 350); };
+$('closeQuick').onclick = () => closeSheet('sheetQuick');
+$('qkSave').onclick = () => {
+  const kcal = parseFloat($('qkKcal').value);
+  if (!(kcal >= 0)) return $('qkKcal').focus();
+  const f = { k:'q'+Date.now(), n:$('qkName').value.trim() || 'Kcal rápidas', kcal, c:parseFloat($('qkC').value)||0, p:parseFloat($('qkP').value)||0, f:parseFloat($('qkF').value)||0, g:100, q:true };
+  closeSheet('sheetQuick');
+  plate.push({ f, g:100, m:null }); renderPlate();
+};
 
 // ---------- Crear alimento ----------
 $('btnNewFood').onclick = () => openNew();
