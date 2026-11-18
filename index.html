@@ -364,12 +364,13 @@ input{font:inherit;color:inherit}
   <div class="form">
     <label class="full">Nombre<input id="nfName" placeholder="Ej.: Yogur griego Mercadona"></label>
     <label>kcal / 100 g<input id="nfKcal" type="number" inputmode="decimal" step="any"></label>
-    <label>Ración habitual (g)<input id="nfG" type="number" inputmode="decimal" step="any" placeholder="100"></label>
+    <label>Ración / unidad (g)<input id="nfG" type="number" inputmode="decimal" step="any" placeholder="100"></label>
     <label>Hidratos / 100 g<input id="nfC" type="number" inputmode="decimal" step="any"></label>
     <label>Proteínas / 100 g<input id="nfP" type="number" inputmode="decimal" step="any"></label>
     <label>Grasas / 100 g<input id="nfF" type="number" inputmode="decimal" step="any"></label>
   </div>
-  <button class="save" id="nfSave" style="margin-top:16px">Guardar y añadir al plato</button>
+  <label class="srow" style="margin-top:6px"><span style="font-size:14px">Contar por unidades (cada unidad = la ración)</span><input type="checkbox" class="sw" id="nfUnit"></label>
+  <button class="save" id="nfSave" style="margin-top:10px">Guardar y añadir al plato</button>
   <div class="mine" id="mine"></div>
 </div></div>
 
@@ -702,7 +703,7 @@ let textEmb = null, vision = null, processor = null, ready = null;
 let plate = [], thumb = null, editing = null; // editing = índice de comida de hoy
 
 // ---------- Catálogo ----------
-const snap = f => ({ k:f.k, n:f.n, kcal:+f.kcal||0, c:+f.c||0, p:+f.p||0, f:+f.f||0, g:+f.g||100, ...(f.u ? { u:+f.u, un:f.un } : {}) });
+const snap = f => ({ k:f.k, n:f.n, kcal:+f.kcal||0, c:+f.c||0, p:+f.p||0, f:+f.f||0, g:+f.g||100, ...(f.u ? { u:+f.u, un:f.un } : f.u === 0 ? { u:0 } : {}) });
 const nUnits = x => x.g / x.f.u;
 const fmtN = v => (Math.round(v*10)/10).toLocaleString('es-ES');
 const unitTxt = (f, g) => { const c = g / f.u, [s, pl] = (f.un || 'unidad|unidades').split('|'); return `${fmtN(c)} ${Math.abs(c - 1) < 0.01 ? s : (pl || s)}`; };
@@ -1030,6 +1031,7 @@ $('btnNewFood').onclick = () => openNew();
 function openNew(prefill = {}){
   $('nfName').value = prefill.n || ''; $('nfKcal').value = prefill.kcal ?? ''; $('nfG').value = prefill.g ?? '';
   $('nfC').value = prefill.c ?? ''; $('nfP').value = prefill.p ?? ''; $('nfF').value = prefill.f ?? '';
+  $('nfUnit').checked = false;
   renderMine(); openSheet('sheetNew');
 }
 $('nfSave').onclick = () => {
@@ -1037,6 +1039,7 @@ $('nfSave').onclick = () => {
   if (!n) return $('nfName').focus();
   if (!(kcal >= 0)) return $('nfKcal').focus();
   const f = { k:'u'+Date.now(), n, kcal, c:parseFloat($('nfC').value)||0, p:parseFloat($('nfP').value)||0, f:parseFloat($('nfF').value)||0, g:parseFloat($('nfG').value)||100 };
+  if ($('nfUnit').checked && f.g > 0) { f.u = f.g; f.un = 'unidad|unidades'; }
   const mine = load(K.mine, []); mine.push(f); store(K.mine, mine);
   closeSheet('sheetNew');
   if (!stack.includes('sheetPlate')) openPlate({ photo:false });
@@ -1096,7 +1099,7 @@ async function onCode(code){
   navigator.vibrate?.(60);
   $('bcmsg').textContent = `Código ${code}: buscando el producto…`;
   const known = findFood('o'+code);
-  if (known) return gotProduct(known);
+  if (known && 'u' in known) return gotProduct(known); // ya revisado: no hace falta internet
   try {
     const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,product_name_es,brands,nutriments,serving_quantity`);
     const j = await r.json();
@@ -1105,14 +1108,20 @@ async function onCode(code){
     if (j.status !== 1 || !p) { scanBusy = false; return notFound(code, 'Este producto no está en Open Food Facts.'); }
     const name = [(p.product_name_es || p.product_name || 'Producto ' + code).trim(), (p.brands||'').split(',')[0].trim()].filter(Boolean).join(' · ');
     if (kcal == null) { scanBusy = false; return notFound(code, 'Producto encontrado pero sin datos nutricionales.', name); }
-    const f = { k:'o'+code, n:name, kcal:+(+kcal).toFixed(1), c:+(+nm.carbohydrates_100g||0).toFixed(1), p:+(+nm.proteins_100g||0).toFixed(1), f:+(+nm.fat_100g||0).toFixed(1), g:Math.round(+p.serving_quantity) || 100 };
+    const serv = Math.round(+p.serving_quantity);
+    const f = { k:'o'+code, n:name, kcal:+(+kcal).toFixed(1), c:+(+nm.carbohydrates_100g||0).toFixed(1), p:+(+nm.proteins_100g||0).toFixed(1), f:+(+nm.fat_100g||0).toFixed(1), g:serv || 100,
+      // Si el envase indica la ración (un gel, una barrita, una lata…), se cuenta por unidades
+      ...(serv > 0 && serv < 1000 ? { u:serv, un:'unidad|unidades' } : { u:0 }) };
     gotProduct(f);
   } catch {
+    if (known) return gotProduct(known);
     scanBusy = false;
     $('bcmsg').textContent = 'Sin conexión. Inténtalo de nuevo o crea el alimento a mano.';
   }
 }
 function gotProduct(f){
+  // Actualiza el favorito guardado con los datos nuevos (p. ej. contar por unidades)
+  const favs = load(K.fav, {}); if (favs[f.k]) { favs[f.k] = snap(f); store(K.fav, favs); }
   closeSheet('sheetBarcode');
   if (!stack.includes('sheetPlate')) openPlate({ photo:false });
   addFood(f);
