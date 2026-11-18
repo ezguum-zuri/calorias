@@ -184,6 +184,13 @@ input{font:inherit;color:inherit}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
 .sw:checked{background:var(--g)}
 .sw:checked::after{left:23px}
+.mrow{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:12px 0;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0}
+.mrow b{flex:1;font-size:15px;font-weight:600}
+.mrow .times{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:13px;flex-basis:100%;padding-left:60px}
+.mrow input[type=time]{border:0;background:var(--bg);border-radius:10px;padding:7px 8px;font-size:15px;color:var(--tx);width:112px}
+.mrow.off b,.mrow.off .times{opacity:.35}
+.mrow.off input[type=time]{pointer-events:none}
 .goal input{flex:1;font-size:28px;font-weight:300;text-align:center;border:0;background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--sh);outline:none}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form label{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
@@ -400,7 +407,7 @@ input{font:inherit;color:inherit}
   <details><summary>✏️ Guardar, editar y borrar</summary><div class="body">
     <ul>
       <li>Antes de guardar, elige <b>qué comida es</b>: desayuno, comida, merienda, cena o picoteo. Se elige sola según la hora y puedes cambiarla.</li>
-      <li>Ajusta tu <b>horario</b> en el botón ☰ (abajo del todo): a qué hora sueles cenar y si sueles merendar. Si no meriendas, lo que tomes entre la comida y la cena cuenta como picoteo.</li>
+      <li>Ajusta tu <b>horario de comidas</b> en el botón ☰ (abajo del todo): la hora de inicio y fin de desayuno, comida, merienda y cena, y activa o quita las que no hagas. Lo que tomes fuera de esos horarios cuenta como picoteo.</li>
       <li>Si añades más cosas a una comida que ya tienes (por ejemplo, un café a media mañana al desayuno), se suman a esa comida.</li>
       <li>Para <b>cambiar</b> una comida, tócala en "Comidas de hoy": puedes cambiar gramos, quitar o añadir alimentos.</li>
       <li>Para <b>borrarla</b>, toca la ✕ de su derecha, o "Borrar esta comida" al editarla.</li>
@@ -460,11 +467,8 @@ input{font:inherit;color:inherit}
   <button class="save" id="goalSave">Guardar objetivo</button>
   <p class="hint">Cálculo orientativo (fórmula de Mifflin-St Jeor). Si tienes alguna condición de salud, embarazo o un objetivo deportivo concreto, consúltalo con un profesional.</p>
   <div class="or">horario de comidas</div>
-  <div class="sched">
-    <label class="srow"><span>Ceno a partir de las</span><input type="time" id="hCena" value="20:00"></label>
-    <label class="srow"><span>Suelo merendar</span><input type="checkbox" class="sw" id="hMer"></label>
-  </div>
-  <p class="hint">Con esto la app elige sola si es desayuno, comida, merienda o cena según la hora. Siempre puedes cambiarlo al guardar.</p>
+  <div class="sched" id="schedBox"></div>
+  <p class="hint">La app elige sola el apartado según la hora. Lo que tomes fuera de estos horarios (o en una comida desactivada) va a <b>picoteo</b>. Siempre puedes cambiarlo al guardar.</p>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -755,14 +759,21 @@ const MEALS = [['desayuno','Desayuno','☕'],['comida','Comida','🍽️'],['mer
 const mealInfo = t => MEALS.find(m => m[0] === t) || MEALS[1];
 // Horario de comidas de cada persona (se guarda en su móvil)
 const toMin = hhmm => { const [H,M] = String(hhmm).split(':').map(Number); return H*60 + (M||0); };
-const sched = () => Object.assign({ cena:'20:00', merienda:true }, load('cal_horarios', {}));
+const SCHED_DEF = { desayuno:{on:true,from:'06:00',to:'11:30'}, comida:{on:true,from:'11:30',to:'16:30'}, merienda:{on:true,from:'16:30',to:'20:00'}, cena:{on:true,from:'20:00',to:'02:00'} };
+function sched(){
+  let s = load('cal_horarios2', null);
+  if (!s) {
+    s = JSON.parse(JSON.stringify(SCHED_DEF));
+    const old = load('cal_horarios', null); // horario anterior (hora de cena + merienda sí/no)
+    if (old) { if (old.cena) { s.cena.from = old.cena; s.merienda.to = old.cena; } s.merienda.on = !!old.merienda; }
+  }
+  return s;
+}
+const inRange = (m, a, b) => { a = toMin(a); b = toMin(b); return a <= b ? (m >= a && m < b) : (m >= a || m < b); };
 const typeByTime = hhmm => {
-  const m = toMin(hhmm), s = sched(), cena = Math.max(toMin(s.cena) || 1200, 960);
-  if (m < 300) return 'cena';
-  if (m < 690) return 'desayuno';
-  if (m >= cena) return 'cena';
-  if (m < Math.min(990, cena)) return 'comida';
-  return s.merienda ? 'merienda' : 'picoteo';
+  const m = toMin(hhmm), s = sched();
+  for (const k of ['desayuno','comida','merienda','cena']) if (s[k]?.on && inRange(m, s[k].from, s[k].to)) return k;
+  return 'picoteo';
 };
 const nowHM = () => new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
 const mealType = m => m.t || typeByTime(m.h);
@@ -1156,9 +1167,21 @@ $('cAct').onclick = e => { const b = e.target.closest('.act'); if (!b) return; p
 $('cGoal').onclick = e => { const b = e.target.closest('button'); if (!b) return; prof.goal = b.dataset.v; saveProf(); syncCalc(); };
 $('cUse').onclick = () => { if (!calcRes) return; localStorage.setItem(K.goal, calcRes); closeSheet('sheetGoal'); renderDash(); toast(`Objetivo: ${calcRes.toLocaleString('es-ES')} kcal al día`); };
 
-$('btnGoal').onclick = () => { $('goalIn').value = getGoal(); syncCalc(); const s = sched(); $('hCena').value = s.cena; $('hMer').checked = !!s.merienda; openSheet('sheetGoal'); $('sheetGoal').scrollTop = 0; };
-const saveSched = () => { store('cal_horarios', { cena: $('hCena').value || '20:00', merienda: $('hMer').checked }); toast('Horario guardado'); };
-$('hCena').onchange = saveSched; $('hMer').onchange = saveSched;
+function renderSched(){
+  const s = sched();
+  $('schedBox').innerHTML = MEALS.slice(0,4).map(([k,l,e]) => `<div class="mrow${s[k].on?'':' off'}">
+      <input type="checkbox" class="sw" data-sm="${k}" ${s[k].on?'checked':''} aria-label="Activar ${l}">
+      <b>${e} ${l}</b>
+      <span class="times"><input type="time" data-sm="${k}" data-k="from" value="${s[k].from}"> a <input type="time" data-sm="${k}" data-k="to" value="${s[k].to}"></span>
+    </div>`).join('');
+}
+$('schedBox').addEventListener('change', e => {
+  const el = e.target, k = el.dataset.sm; if (!k) return;
+  const s = sched();
+  if (el.type === 'checkbox') s[k].on = el.checked; else if (el.value) s[k][el.dataset.k] = el.value;
+  store('cal_horarios2', s); renderSched(); toast('Horario guardado');
+});
+$('btnGoal').onclick = () => { $('goalIn').value = getGoal(); syncCalc(); renderSched(); openSheet('sheetGoal'); $('sheetGoal').scrollTop = 0; };
 $('goalSave').onclick = () => {
   const v = Math.round(+$('goalIn').value);
   if (v >= 800 && v <= 6000) { localStorage.setItem(K.goal, v); closeSheet('sheetGoal'); renderDash(); }
