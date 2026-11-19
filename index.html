@@ -964,16 +964,16 @@ function renderQuick(){
   const recs = load(K.rec, []).slice(0, 12);
   $('favBox').hidden = !favs.length; $('recBox').hidden = !recs.length;
   $('favList').innerHTML = favs.map(f => chipHTML(f)).join('');
-  $('recList').innerHTML = recs.map(f => chipHTML(f, `${f.u ? unitTxt(f, f.g) : f.g + ' g'} · ${r0(f.kcal*f.g/100)} kcal`)).join('');
+  $('recList').innerHTML = recs.map(f => chipHTML(f, f.u ? `${unitTxt(f, +f.u)} · ${r0(f.kcal*f.u/100)} kcal` : `${f.g} g · ${r0(f.kcal*f.g/100)} kcal`)).join('');
 }
 $('sheetPlate').addEventListener('click', e => {
   const c = e.target.closest('.chip[data-k]'); if (!c) return;
   const k = c.dataset.k;
   if (inPlate(k)) { plate = plate.filter(x => x.f.k !== k); renderPlate(); return; }
-  // En "Recientes" se repite la última cantidad que usaste
+  // En "Recientes" se repite la última cantidad en gramos; lo que va por unidades empieza en 1
   const rec = c.closest('#recList') ? load(K.rec, []).find(r => r.k === k) : null;
   const f = rec || findFood(k); if (!f) return;
-  addFood(f, rec ? rec.g : undefined);
+  addFood(f, rec && !(+rec.u) ? rec.g : undefined);
   $('buscar').value=''; $('busList').innerHTML='';
 });
 function isFav(k){ return !!load(K.fav, {})[k]; }
