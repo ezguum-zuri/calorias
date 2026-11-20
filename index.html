@@ -766,6 +766,7 @@ const RAW = [
 ['Palomitas','popcorn',480,60,9,23,30],
 ['Chocolate negro 85%','dark chocolate squares',590,19,10,52,10,10,'onza|onzas'],
 ['Pipas peladas','sunflower seeds',580,20,21,49,30],
+['Ensaladilla rusa','russian potato salad with tuna and mayonnaise',170,11,6,11.5,250],
 ];
 const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
