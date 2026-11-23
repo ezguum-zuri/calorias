@@ -793,6 +793,16 @@ const RAW = [
 ['Sopa de pescado','fish and seafood soup',50,3,5,2,300],
 ['Consomé','clear broth consomme',15,1,2,0.5,250],
 ['Canapés variados','assorted canapes appetizers',280,22,9,17,20,20,'canapé|canapés'],
+['Hojaldre de setas','puff pastry filled with mushrooms',280,22,5,19,150,150,'porción|porciones'],
+['Hojaldre (empanadilla / volován)','puff pastry vol au vent',380,35,6,24,60,60,'pieza|piezas'],
+['Bacalao rebozado','battered fried cod',210,10,18,11,150,75,'trozo|trozos'],
+['Merluza rebozada','battered fried hake',190,9,15,10,150,75,'trozo|trozos'],
+['Pescado rebozado','battered fried fish',200,10,16,11,150],
+['Natillas','vanilla custard natillas',120,18,3.5,3.5,125,125,'tarrina|tarrinas'],
+['Cuajada','curd cuajada sheep milk',100,5,5.5,6,125,125,'cuajada|cuajadas'],
+['Crema catalana','creme brulee crema catalana',190,24,4,9,130,130,'cazuelita|cazuelitas'],
+['Natillas de chocolate','chocolate custard pudding cup',135,20,3.5,4.5,125,125,'tarrina|tarrinas'],
+['Mousse de chocolate','chocolate mousse',220,24,4,12,60,60,'tarrina|tarrinas'],
 ];
 const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
