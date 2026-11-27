@@ -820,6 +820,20 @@ const RAW = [
 ['Puré de lentejas','lentil puree soup',80,11,5,1.8,300],
 ['Salmorejo','salmorejo thick cold tomato soup',90,8,2,5.5,250],
 ['Ajoblanco','ajoblanco cold almond soup',120,6,3,9.5,250],
+['Espaguetis con tomate','spaghetti with tomato sauce',140,24,5,3,350],
+['Espaguetis con tomate y atún','spaghetti with tomato sauce and tuna',155,21,8.5,4,350],
+['Espaguetis carbonara','spaghetti carbonara with bacon and cream',190,22,8,8,350],
+['Espaguetis al ajillo (aglio e olio)','spaghetti with garlic and olive oil',210,28,5,8.5,300],
+['Espaguetis con gambas','spaghetti with shrimp and garlic',165,22,9,4.5,350],
+['Espaguetis marinera','spaghetti with seafood',150,21,9,3.5,350],
+['Espaguetis con setas','spaghetti with mushrooms',150,22,5,4.5,350],
+['Espaguetis 4 quesos','spaghetti with four cheese sauce',220,22,9,11,300],
+['Espaguetis con verduras','spaghetti with vegetables',130,21,4.5,3.5,350],
+['Macarrones con chorizo','macaroni with tomato and chorizo',185,22,7,7.5,350],
+['Tallarines con nata y bacon','tagliatelle with cream and bacon',210,22,7,10.5,300],
+['Raviolis','ravioli with sauce',170,24,7,5,300],
+['Tortellini','tortellini with cream sauce',190,24,8,7,300],
+['Ñoquis','gnocchi with tomato sauce',140,26,3.5,2.5,300],
 ];
 const FOODS = RAW.map(([n,en,kcal,c,p,f,g,u,un],i)=>({k:'b'+i,n,en,kcal,c,p,f,g,u,un}));
 const SIG = 'v2-' + FOODS.length + '-' + [...FOODS.map(f=>f.en).join('|')].reduce((h,ch)=>(h*31+ch.charCodeAt(0))|0,7);
